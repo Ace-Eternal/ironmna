@@ -1,0 +1,18 @@
+server:
+  port: 8888
+  servlet:
+    context-path: /iron
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://106.54.35.68:3306/iron_management
+    username: root
+    password: Msk@13819960633
+mybatis-plus:
+  global-config:
+    db-config:
+      logic-delete-field: is_deleted # ?????????
+      logic-delete-value: 1 # ?????????????? 1
+      logic-not-delete-value: 0 # ?????????????? 0
+  configuration:
+    map-underscore-to-camel-case: false
