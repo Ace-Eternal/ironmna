@@ -77,6 +77,13 @@ export function getOrderDetail(params) {
         method: 'get'
     });
 }
+export function updateOrder(data) {
+    return service({
+        url: '/order/updateOrder',
+        method: 'post',
+        data
+    });
+}
 export function deleteOrder(params) {
     return service({
         url: `/order/deleteOrder?orderId=${params}`,

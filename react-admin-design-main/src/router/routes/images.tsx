@@ -11,7 +11,8 @@ const ImageRoute: RouteObject = {
   meta: {
     title: '图片处理',
     icon: 'image',
-    orderNo: 4
+    orderNo: 4,
+    hideMenu: true
   },
   children: [
     {

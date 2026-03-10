@@ -11,7 +11,8 @@ const TableRoute: RouteObject = {
   meta: {
     title: '表格',
     icon: 'table',
-    orderNo: 3
+    orderNo: 3,
+    hideMenu: true
   },
   children: [
     {

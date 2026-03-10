@@ -11,7 +11,8 @@ const ExcelRoute: RouteObject = {
   meta: {
     title: 'Excel',
     icon: 'excel',
-    orderNo: 10
+    orderNo: 10,
+    hideMenu: true
   },
   children: [
     {

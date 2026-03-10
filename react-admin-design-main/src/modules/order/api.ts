@@ -24,6 +24,14 @@ export function getOrderDetail(id: number | string) {
   })
 }
 
+export function updateOrder(data: Record<string, unknown>) {
+  return httpClient({
+    url: '/order/updateOrder',
+    method: 'post',
+    data
+  })
+}
+
 export function deleteOrder(id: number | string) {
   return httpClient({
     url: `/order/deleteOrder?orderId=${id}`,

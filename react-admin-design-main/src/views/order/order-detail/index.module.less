@@ -1,0 +1,173 @@
+.pageShell {
+  width: 100%;
+}
+
+.pageCard {
+  border-radius: 14px;
+}
+
+.headerBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.pageTitle {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #1f1f1f;
+}
+
+.sectionCard {
+  margin-bottom: 16px;
+  border-radius: 12px;
+  border: 1px solid #f0f0f0;
+}
+
+.tagRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.summaryBar {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.summaryItem {
+  min-width: 140px;
+  padding: 10px 14px;
+  background: #fafafa;
+  border: 1px solid #f0f0f0;
+  border-radius: 10px;
+}
+
+.summaryLabel {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 12px;
+  color: #8c8c8c;
+}
+
+.toolbar {
+  margin-top: 16px;
+  margin-bottom: 14px;
+}
+
+.tableScroller {
+  overflow-x: auto;
+}
+
+.detailTable {
+  min-width: 1508px;
+  border: 1px solid #f0f0f0;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.tableHead {
+  display: flex;
+  background: #fafafa;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.headCell {
+  flex: 0 0 auto;
+  padding: 12px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #595959;
+  text-align: center;
+  border-right: 1px solid #f5f5f5;
+}
+
+.tableBody {
+  background: #fff;
+}
+
+.tableRow {
+  display: flex;
+  align-items: stretch;
+  border-bottom: 1px solid #f5f5f5;
+}
+
+.tableRow:last-child {
+  border-bottom: 0;
+}
+
+.tableCell {
+  flex: 0 0 auto;
+  padding: 10px 8px;
+  border-right: 1px solid #f5f5f5;
+}
+
+.tableCell:last-child {
+  border-right: 0;
+}
+
+.inlineItem {
+  margin-bottom: 0;
+}
+
+.inlineItem :global(.ant-input-number),
+.inlineItem :global(.ant-select-selector),
+.inlineItem :global(.ant-input) {
+  border-radius: 8px;
+}
+
+.inlineItem :global(.ant-input-number) {
+  width: 100%;
+}
+
+.inlineItem :global(.ant-input-number-handler-wrap) {
+  display: none;
+}
+
+.inlineItem :global(.ant-input-number-input) {
+  padding-left: 11px;
+  padding-right: 11px;
+}
+
+.metricBox {
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: #f5f5f5;
+  color: #262626;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.metricAccent {
+  background: #f6ffed;
+  color: #237804;
+}
+
+.emptyCell {
+  background: #fafafa;
+}
+
+.emptyValue {
+  color: #bfbfbf;
+}
+
+.fullWidth {
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .headerBar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+}

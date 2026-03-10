@@ -452,7 +452,7 @@ const BasicForm: FC = () => {
                         <strong>{renderMetricValue(summary.totalAmount)}</strong>
                       </div>
                       <div className={styles.summaryItem}>
-                        <span className={styles.summaryLabel}>应收合计</span>
+                        <span className={styles.summaryLabel}>账单总额</span>
                         <strong>{renderMetricValue(totalPayable)}</strong>
                       </div>
                     </div>
