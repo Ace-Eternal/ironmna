@@ -1,531 +1,476 @@
-import type { CascaderProps, TreeSelectProps } from 'antd'
+import type { FC } from 'react'
 import type { Rule } from 'antd/es/form'
-import { type FC, useState, useEffect } from 'react'
-import {
-  Card,
-  Form,
-  Row,
-  Col,
-  Input,
-  InputNumber,
-  Button,
-  Select,
-  DatePicker,
-  TimePicker,
-  Switch,
-  Slider,
-  Cascader,
-  TreeSelect,
-  Radio,
-  Checkbox
-} from 'antd'
-import { PlusOutlined } from '@ant-design/icons'
-import { FORM_COMPO } from '@/settings/websiteSetting'
-import { PageWrapper } from '@/components/Page'
-import {
-  provinceData,
-  cityData,
-  cascaderData,
-  treeData,
-  radioData,
-  checkboxData,
-  typeData,
-  steeltypeData
-} from './data'
-import { addCustomer, createOrder } from '@/api'
-
-import { message } from 'antd'
-
-import { getCustomerNameList } from '@/api'
+import type { InputNumberProps } from 'antd'
+import { useEffect, useState } from 'react'
+import { Button, Card, Col, Form, Input, InputNumber, Row, Select, message } from 'antd'
+import { DeleteOutlined, PlusOutlined } from '@ant-design/icons'
+import { createOrder, getCustomerNameList } from '@/api'
+import { steeltypeData, typeData } from './data'
 import type { APIResult, CustomerDataType } from './types'
+import styles from './index.module.less'
+
+type MaterialFieldName =
+  | 'type'
+  | 'steel_type'
+  | 'length'
+  | 'length_remain'
+  | 'width'
+  | 'width_remain'
+  | 'thickness'
+  | 'thickness_remain'
+  | 'amount'
+  | 'monovalent'
+  | 'cut_fee'
+  | 'note'
+
+type MaterialColumn = {
+  key: MaterialFieldName | 'weight' | 'amount_money' | 'actions'
+  label: string
+  width: number
+}
+
+const materialColumns: MaterialColumn[] = [
+  { key: 'type', label: '类型', width: 120 },
+  { key: 'steel_type', label: '钢号', width: 130 },
+  { key: 'length', label: '长', width: 96 },
+  { key: 'length_remain', label: '余量', width: 96 },
+  { key: 'width', label: '宽', width: 96 },
+  { key: 'width_remain', label: '余量', width: 96 },
+  { key: 'thickness', label: '厚/直径', width: 108 },
+  { key: 'thickness_remain', label: '余量', width: 96 },
+  { key: 'amount', label: '数量', width: 90 },
+  { key: 'weight', label: '重量(kg)', width: 116 },
+  { key: 'monovalent', label: '单价', width: 104 },
+  { key: 'cut_fee', label: '刀费', width: 104 },
+  { key: 'amount_money', label: '金额', width: 116 },
+  { key: 'note', label: '备注', width: 180 },
+  { key: 'actions', label: '操作', width: 112 }
+]
+
+const SQUARE_STEEL = typeData.type[0]
+const ROUND_STEEL = typeData.type[1]
+
+const formRules: Record<string, Rule[]> = {
+  lengthLimit: [{ required: true, message: '材料长度不能为空' }],
+  lengthRemainLimit: [{ required: true, message: '材料长度余量不能为空' }],
+  thicknessLimit: [{ required: true, message: '材料厚度不能为空' }],
+  thicknessRemainLimit: [{ required: true, message: '材料厚度余量不能为空' }],
+  amountLimit: [{ required: true, message: '材料数量不能为空' }],
+  monovalentLimit: [{ required: true, message: '材料单价不能为空' }],
+  cutFeeLimit: [{ required: true, message: '刀费不能为空' }],
+  processFeeLimit: [{ required: true, message: '加工费不能为空' }],
+  selectCustomerLimit: [{ required: true, message: '请选择一个客户' }],
+  selectTypeLimit: [{ required: true, message: '请选择材料类型' }],
+  selectSteelTypeLimit: [{ required: true, message: '请选择钢号' }]
+}
+
+const getNumberValue = (value: unknown) => Number(value) || 0
+
+const calculateWeight = (
+  type: string,
+  length: number,
+  lengthRemain: number,
+  width: number,
+  widthRemain: number,
+  thickness: number,
+  thicknessRemain: number,
+  amount: number
+) => {
+  const l = getNumberValue(length)
+  const w = getNumberValue(width)
+  const t = getNumberValue(thickness)
+  const lr = getNumberValue(lengthRemain)
+  const wr = getNumberValue(widthRemain)
+  const tr = getNumberValue(thicknessRemain)
+  const qty = getNumberValue(amount)
+
+  if (type === SQUARE_STEEL) {
+    return (qty * (l + lr) * (w + wr) * (t + tr) * 7.85) / 1000000
+  }
+
+  return (qty * (t + tr) * (t + tr) * (l + lr) * 0.006167) / 1000
+}
+
+const renderMetricValue = (value: number) => {
+  if (!Number.isFinite(value) || value <= 0) {
+    return '0.00'
+  }
+
+  return value.toFixed(2)
+}
+
+const decimalInputProps: InputNumberProps = {
+  className: styles.fullWidth,
+  controls: false,
+  step: 0.01,
+  min: 0,
+  precision: 2,
+  inputMode: 'decimal'
+}
+
+const integerInputProps: InputNumberProps = {
+  className: styles.fullWidth,
+  controls: false,
+  step: 1,
+  min: 0,
+  precision: 0,
+  inputMode: 'numeric'
+}
 
 const BasicForm: FC = () => {
   const [form] = Form.useForm()
+  const [customers, setCustomers] = useState<CustomerDataType[]>([])
 
-  const province = provinceData[0]
-  const [formState] = useState({
-    inputLimit: '',
-    inputNum: '',
-    password: '',
-    selectProvince: province,
-    selectCity: cityData[province][0],
-    dateVal: '',
-    timeVal: '',
-    switchVal: true,
-    sliderVal: 32,
-    cascaderVal: [],
-    cascaderLazy: [],
-    treeVal: ['0-0-1'],
-    treeLazy: '1',
-    radioVal: 'offline',
-    checkboxVal: ['read'],
-    textareaVal: ''
-  })
-
-  const formRules: Record<string, Rule[]> = {
-    lengthLimit: [{ required: true, message: '材料长度不能为空' }],
-    lengthRemainLimit: [{ required: true, message: '材料长度余量不能为空' }],
-    thicknessLimit: [{ required: true, message: '材料厚度不能为空' }],
-    thicknessRemainLimit: [{ required: true, message: '材料厚度余量不能为空' }],
-    amountLimit: [{ required: true, message: '材料件数不能为空' }],
-    monovalentLimit: [{ required: true, message: '材料单价不能为空' }],
-    cutFeeLimit: [{ required: true, message: '刀费不能为空' }],
-    processFeeLimit: [{ required: true, message: '加工费不能为空' }],
-    selectCustomerLimit: [{ required: true, message: '请选择一个客户！' }],
-    selectTypeLimit: [{ required: true, message: '请选择材料类型！' }],
-    selectSteelTypeLimit: [{ required: true, message: '请选择钢号！' }]
-  }
-
-  const switchVal = Form.useWatch('switchVal', form)
-
-  const [cascaderLazyData, setCascaderLazyData] = useState<CascaderProps['options']>([
-    { value: 1, label: '选项1', isLeaf: false }
-  ])
-
-  const [treeLazyData, setTreeLazyData] = useState<TreeSelectProps['treeData']>([
-    { id: 1, pId: 0, value: '1', title: 'Expand to load' },
-    { id: 2, pId: 0, value: '2', title: 'Expand to load' },
-    { id: 3, pId: 0, value: '3', title: 'Tree Node', isLeaf: true }
-  ])
-
-  // 客户姓名+手机号列表
-  const [customerDate, setCustomerDate] = useState<CustomerDataType[]>([])
-
-  const handleProvinceChange = (value: any) => {
-    form.setFieldsValue({ selectCity: cityData[value][0] })
-  }
-
-  const loadCascaderLazy = (selectedOptions: any) => {
-    const targetOption = selectedOptions[selectedOptions.length - 1]
-    targetOption.loading = true
-
-    setTimeout(() => {
-      targetOption.loading = false
-      let id = selectedOptions.length
-      const level = selectedOptions.length
-      targetOption.children = Array.from({ length: level + 1 }).map(() => ({
-        value: ++id,
-        label: `选项${id}`,
-        isLeaf: level >= 2
-      }))
-      setCascaderLazyData([...cascaderLazyData!])
-    }, 1000)
-  }
-
-  const loadTreeLazy: TreeSelectProps['loadData'] = ({ id }) => {
-    const genTreeNode = (parentId: number, isLeaf = false) => {
-      const random = Math.random().toString(36).substring(2, 6)
-      return {
-        id: random,
-        pId: parentId,
-        value: random,
-        title: isLeaf ? 'Tree Node' : 'Expand to load',
-        isLeaf
-      }
+  useEffect(() => {
+    const fetchCustomers = async () => {
+      const data = await getCustomerNameList()
+      const { records } = data as unknown as APIResult
+      setCustomers(records)
     }
 
-    return new Promise(resolve => {
-      setTimeout(() => {
-        setTreeLazyData(treeLazyData?.concat([genTreeNode(id, false), genTreeNode(id, true), genTreeNode(id, true)]))
-        resolve(undefined)
-      }, 500)
-    })
-  }
-
-  const onFinish = (values: any) => {
-    console.log('Success:', values)
-  }
+    void fetchCustomers()
+  }, [])
 
   const resetForm = () => {
     form.resetFields()
   }
 
-  function handleAddOrder() {
-    const formData = form.getFieldsValue()
-    formData.time = Date.now()
-    console.log('here is time')
-    createOrder(formData)
-      .then(() => {
-        // 成功时显示消息
-        message.success('创建订单成功！')
-        form.resetFields() //（可选）成功后可重置表单
+  const handleAddOrder = async () => {
+    try {
+      const values = await form.validateFields()
+      await createOrder({
+        ...values,
+        time: Date.now()
       })
-      .catch(error => {
-        // 失败时显示错误信息
-        message.error(`创建订单失败: ${error.message}`)
-      })
-  }
-
-  useEffect(() => {
-    fetchData()
-  }, [])
-
-  async function fetchData() {
-    const data = await getCustomerNameList()
-    const { records } = data as unknown as APIResult
-    setCustomerDate(records)
-  }
-
-  interface MaterialRowType {
-    key: number
-    materialType?: string
-    length?: string
-    lengthAllowance?: string
-    width?: string
-    widthAllowance?: string
-    height?: string
-    heightAllowance?: string
-  }
-
-  const [rows, setRows] = useState<MaterialRowType[]>([{ key: 0 }])
-  const addNewRow = () => {
-    setRows([...rows, { key: rows.length }])
-  }
-
-  const calculateWeight = (
-    type: string,
-    length: number,
-    length_remain: number,
-    width: number,
-    width_remain: number,
-    thickness: number,
-    thickness_remain: number,
-    amount: number
-  ) => {
-    const l = Number(length) || 0
-    const w = Number(width) || 0
-    const t = Number(thickness) || 0
-    const lr = Number(length_remain) || 0
-    const wr = Number(width_remain) || 0
-    const tr = Number(thickness_remain) || 0
-    if (type === '方钢') {
-      return (amount * (l + lr) * (w + wr) * (t + tr) * 7.85) / 1000000
-    } else {
-      return (amount * (t + tr) * (t + tr) * (l + lr) * 0.006167) / 1000
+      message.success('创建订单成功')
+      form.resetFields()
+    } catch (error) {
+      const fallback = error instanceof Error ? error.message : '请检查表单内容'
+      message.error(`创建订单失败: ${fallback}`)
     }
   }
 
+  const orderItems = Form.useWatch('orderItems', form) || []
+  const processFee = getNumberValue(Form.useWatch('process_fee', form))
+
+  const summary = orderItems.reduce(
+    (acc: { totalWeight: number; totalAmount: number }, item: Record<string, unknown>) => {
+      const weight = calculateWeight(
+        String(item?.type || ''),
+        getNumberValue(item?.length),
+        getNumberValue(item?.length_remain),
+        getNumberValue(item?.width),
+        getNumberValue(item?.width_remain),
+        getNumberValue(item?.thickness),
+        getNumberValue(item?.thickness_remain),
+        getNumberValue(item?.amount)
+      )
+      const amountMoney = weight * getNumberValue(item?.monovalent) + getNumberValue(item?.cut_fee)
+
+      return {
+        totalWeight: acc.totalWeight + weight,
+        totalAmount: acc.totalAmount + amountMoney
+      }
+    },
+    { totalWeight: 0, totalAmount: 0 }
+  )
+
+  const totalPayable = summary.totalAmount + processFee
+
   return (
-    <PageWrapper plugin={FORM_COMPO}>
-      <Card bordered={false}>
+    <div className={styles.pageShell}>
+      <Card bordered={false} className={styles.pageCard}>
+        <div className={styles.pageHeader}>
+          <div>
+            <h3 className={styles.pageTitle}>添加账单</h3>
+          </div>
+        </div>
+
         <Form
           form={form}
-          labelCol={{ span: 6 }}
-          wrapperCol={{ span: 18 }}
-          initialValues={{ ...formState }}
-          style={{ width: '100%', margin: '0 auto' }}
-          onFinish={onFinish}
+          layout='vertical'
+          initialValues={{
+            orderItems: [{}]
+          }}
+          className={styles.form}
         >
-          {/* 选择客户姓名列表 */}
-          <Form.Item label='选择客户:'>
-            <Row gutter={12}>
-              <Col span={20}>
-                <Form.Item name='customer_id' rules={formRules.selectCustomerLimit}>
+          <Card size='small' className={styles.sectionCard} title='客户信息'>
+            <Row gutter={16}>
+              <Col xs={24} md={16} lg={12}>
+                <Form.Item label='选择客户' name='customer_id' rules={formRules.selectCustomerLimit}>
                   <Select
-                    options={customerDate.map((customer: CustomerDataType) => ({
+                    showSearch
+                    placeholder='请选择客户'
+                    optionFilterProp='label'
+                    options={customers.map((customer: CustomerDataType) => ({
                       value: customer.id,
-                      label: `${customer.customer_name} (${customer.telephone})`
+                      label: `${customer.customer_name} (${customer.telephone || '无电话'})`
                     }))}
                   />
                 </Form.Item>
               </Col>
             </Row>
-          </Form.Item>
-          {/* 选择日期 */}
-          {/* <Form.Item label='日期和时间选择器:' name='time'>
-            <Row gutter={12}>
-              <Col span={12}>
-                <DatePicker placeholder='选择日期' style={{ width: '100%' }} />
+          </Card>
+
+          <Card size='small' className={styles.sectionCard} title='账单信息'>
+            <Row gutter={16}>
+              <Col xs={24} md={8} lg={6}>
+                <Form.Item label='加工费' name='process_fee' rules={formRules.processFeeLimit}>
+                  <InputNumber {...decimalInputProps} placeholder='请输入加工费' />
+                </Form.Item>
               </Col>
-              <Col span={12}>
-                <Form.Item name='timeVal'>
-                  <TimePicker placeholder='选择时间' style={{ width: '100%' }} />
+              <Col xs={24} md={16} lg={18}>
+                <Form.Item label='备注' name='note'>
+                  <Input placeholder='请输入备注信息' />
                 </Form.Item>
               </Col>
             </Row>
-          </Form.Item> */}
-          {/* 每一件材料 */}
+          </Card>
 
-          {/* 表头 */}
-          <Row gutter={8} style={{ marginBottom: 8 }}>
-            {/* 表头行 - 总span=24 */}
-            <Col span={2}>
-              <div className='compact-label'>类型</div>
-            </Col>
-            <Col span={2}>
-              <div className='compact-label'>钢号</div>
-            </Col>
-            <Col span={1}>
-              <div className='compact-label'>长</div>
-            </Col>
-            <Col span={1}>
-              <div className='compact-label'>余量</div>
-            </Col>
-            <Col span={1}>
-              <div className='compact-label'>宽</div>
-            </Col>
-            <Col span={1}>
-              <div className='compact-label'>余量</div>
-            </Col>
-            <Col span={1}>
-              <div className='compact-label'>厚/直径</div>
-            </Col>
-            <Col span={1}>
-              <div className='compact-label'>余量</div>
-            </Col>
-            <Col span={1}>
-              <div className='compact-label'>数量</div>
-            </Col>
-            <Col span={2}>
-              <div className='compact-label'>重量(kg)</div>
-            </Col>
-            <Col span={2}>
-              <div className='compact-label'>单价</div>
-            </Col>
-            <Col span={2}>
-              <div className='compact-label'>刀费</div>
-            </Col>
-            <Col span={2}>
-              <div className='compact-label'>金额</div>
-            </Col>
-            <Col span={2}>
-              <div className='compact-label'>备注</div>
-            </Col>
-            <Col span={2}>
-              <div className='compact-label'>操作</div>
-            </Col>
-          </Row>
-          {/* 动态行 */}
-          <Form.List name='orderItems'>
-            {(fields, { add, remove }) => (
-              <>
-                {fields.map((field, index) => {
-                  // Get current field values for weight calculation
-                  const type = form.getFieldValue(['orderItems', field.name, 'type'])
-                  const length = form.getFieldValue(['orderItems', field.name, 'length'])
-                  const length_remain = form.getFieldValue(['orderItems', field.name, 'length_remain'])
-                  const width = form.getFieldValue(['orderItems', field.name, 'width'])
-                  const width_remain = form.getFieldValue(['orderItems', field.name, 'width_remain'])
-                  const thickness = form.getFieldValue(['orderItems', field.name, 'thickness'])
-                  const thickness_remain = form.getFieldValue(['orderItems', field.name, 'thickness_remain'])
-                  const amount = form.getFieldValue(['orderItems', field.name, 'amount'])
-                  const monovalent = form.getFieldValue(['orderItems', field.name, 'monovalent'])
-                  const cut_fee = form.getFieldValue(['orderItems', field.name, 'cut_fee'])
-                  const weight = calculateWeight(
-                    type,
-                    length,
-                    length_remain,
-                    width,
-                    width_remain,
-                    thickness,
-                    thickness_remain,
-                    amount
-                  )
-                  return (
-                    <Row key={rows[index].key} gutter={8} style={{ marginBottom: 8 }}>
-                      {/* 表单行 - 总span=24 */}
-                      <Col span={2}>
-                        <Form.Item
-                          {...field}
-                          name={[field.name, 'type']}
-                          style={{ marginBottom: 0 }}
-                          rules={formRules.selectTypeLimit}
-                        >
-                          <Select
-                            placeholder='材料类型'
-                            options={typeData.type.map((typeName: string) => ({
-                              value: typeName,
-                              label: typeName
-                            }))}
-                          />
-                        </Form.Item>
-                      </Col>
-                      <Col span={2}>
-                        <Form.Item
-                          {...field}
-                          name={[field.name, 'steel_type']}
-                          style={{ marginBottom: 0 }}
-                          rules={formRules.selectSteelTypeLimit}
-                        >
-                          <Select
-                            placeholder='钢号'
-                            options={steeltypeData.type.map((steeltypeName: string) => ({
-                              value: steeltypeName,
-                              label: steeltypeName
-                            }))}
-                          />
-                        </Form.Item>
-                      </Col>
-                      <Col span={1}>
-                        <Form.Item
-                          {...field}
-                          name={[field.name, 'length']}
-                          style={{ marginBottom: 0 }}
-                          rules={formRules.lengthLimit}
-                        >
-                          <InputNumber placeholder='长' />
-                        </Form.Item>
-                      </Col>
-                      <Col span={1}>
-                        <Form.Item
-                          {...field}
-                          name={[field.name, 'length_remain']}
-                          style={{ marginBottom: 0 }}
-                          rules={formRules.lengthRemainLimit}
-                        >
-                          <InputNumber placeholder='余量' />
-                        </Form.Item>
-                      </Col>
-                      <Col span={1}>
-                        <Form.Item {...field} name={[field.name, 'width']} style={{ marginBottom: 0 }}>
-                          <InputNumber placeholder='宽' />
-                        </Form.Item>
-                      </Col>
-                      <Col span={1}>
-                        <Form.Item {...field} name={[field.name, 'width_remain']} style={{ marginBottom: 0 }}>
-                          <InputNumber placeholder='余量' />
-                        </Form.Item>
-                      </Col>
-                      <Col span={1}>
-                        <Form.Item
-                          {...field}
-                          name={[field.name, 'thickness']}
-                          style={{ marginBottom: 0 }}
-                          rules={formRules.thicknessLimit}
-                        >
-                          <InputNumber placeholder='高' />
-                        </Form.Item>
-                      </Col>
-                      <Col span={1}>
-                        <Form.Item
-                          {...field}
-                          name={[field.name, 'thickness_remain']}
-                          style={{ marginBottom: 0 }}
-                          rules={formRules.thicknessRemainLimit}
-                        >
-                          <InputNumber placeholder='余量' />
-                        </Form.Item>
-                      </Col>
-                      <Col span={1}>
-                        <Form.Item
-                          {...field}
-                          name={[field.name, 'amount']}
-                          style={{ marginBottom: 0 }}
-                          rules={formRules.amountLimit}
-                        >
-                          <InputNumber placeholder='数量' />
-                        </Form.Item>
-                      </Col>
-                      <Col span={2}>
-                        <div
-                          style={{
-                            padding: '4px 0',
-                            textAlign: 'center',
-                            backgroundColor: '#f5f5f5',
-                            borderRadius: 4,
-                            fontSize: 12,
-                            height: '100%',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center'
-                          }}
-                        >
-                          {weight ? weight.toFixed(2) : '0.00'}
-                        </div>
-                      </Col>
-                      <Col span={2}>
-                        <Form.Item
-                          {...field}
-                          name={[field.name, 'monovalent']}
-                          style={{ marginBottom: 0 }}
-                          rules={formRules.monovalentLimit}
-                        >
-                          <InputNumber placeholder='单价' />
-                        </Form.Item>
-                      </Col>
-                      <Col span={2}>
-                        <Form.Item
-                          {...field}
-                          name={[field.name, 'cut_fee']}
-                          style={{ marginBottom: 0 }}
-                          rules={formRules.cutFeeLimit}
-                        >
-                          <InputNumber placeholder='刀费' />
-                        </Form.Item>
-                      </Col>
-                      <Col span={2}>
-                        <div
-                          style={{
-                            padding: '4px 0',
-                            textAlign: 'center',
-                            backgroundColor: '#f5f5f5',
-                            borderRadius: 4,
-                            fontSize: 12,
-                            height: '100%',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center'
-                          }}
-                        >
-                          {weight * monovalent + cut_fee ? (weight * monovalent + cut_fee).toFixed(2) : '0.00'}
-                        </div>
-                      </Col>
-                      <Col span={2}>
-                        <Form.Item {...field} name={[field.name, 'note']} style={{ marginBottom: 0 }}>
-                          <Input placeholder='备注' />
-                        </Form.Item>
-                      </Col>
-                      <Col span={2}>
-                        <Button onClick={() => addNewRow()} size='small' style={{ height: '100%', marginRight: '5px' }}>
-                          计算
-                        </Button>
-                        <Button danger onClick={() => remove(index)} size='small' style={{ height: '100%' }}>
-                          删除
-                        </Button>
-                      </Col>
-                    </Row>
-                  )
-                })}
-                <Button
-                  type='dashed'
-                  onClick={() => {
-                    add()
-                    addNewRow()
-                  }}
-                  icon={<PlusOutlined />}
-                  style={{ width: '100%' }}
-                >
-                  添加新行
-                </Button>
-              </>
-            )}
-          </Form.List>
+          <Card size='small' className={styles.sectionCard} title='材料明细'>
+            <Form.List name='orderItems'>
+              {(fields, { add, remove }) => (
+                <>
+                  <div className={styles.tableScroller}>
+                    <div className={styles.materialTable} style={{ minWidth: materialColumns.reduce((sum, col) => sum + col.width, 0) }}>
+                      <div className={styles.tableHead}>
+                        {materialColumns.map(column => (
+                          <div
+                            key={column.key}
+                            className={styles.headCell}
+                            style={{ width: column.width, minWidth: column.width }}
+                          >
+                            {column.label}
+                          </div>
+                        ))}
+                      </div>
 
-          <Form.Item label='加工费' name='process_fee' style={{ marginTop: '16px' }} rules={formRules.processFeeLimit}>
-            <InputNumber placeholder='请输入加工费' />
-          </Form.Item>
+                      <div className={styles.tableBody}>
+                        {fields.map(field => {
+                          const item = orderItems[field.name] || {}
+                          const itemType = String(item?.type || '')
+                          const isRoundSteel = itemType === ROUND_STEEL
+                          const thicknessPlaceholder = itemType === SQUARE_STEEL ? '厚' : itemType === ROUND_STEEL ? '直径' : '厚/直径'
 
-          <Form.Item label='备注' name='note'>
-            <Input placeholder='请输入备注' />
-          </Form.Item>
+                          const weight = calculateWeight(
+                            itemType,
+                            getNumberValue(item?.length),
+                            getNumberValue(item?.length_remain),
+                            getNumberValue(item?.width),
+                            getNumberValue(item?.width_remain),
+                            getNumberValue(item?.thickness),
+                            getNumberValue(item?.thickness_remain),
+                            getNumberValue(item?.amount)
+                          )
+                          const amountMoney = weight * getNumberValue(item?.monovalent) + getNumberValue(item?.cut_fee)
 
-          <Form.Item
-            wrapperCol={{ span: 24 }}
-            style={{
-              textAlign: 'center', // 子元素水平居中
-              marginTop: 16 // 适当的上边距
-            }}
-          >
-            <Button type='primary' htmlType='submit' onClick={handleAddOrder}>
+                          return (
+                            <div key={field.key} className={styles.tableRow}>
+                              <div className={styles.tableCell} style={{ width: 120, minWidth: 120 }}>
+                                <Form.Item
+                                  {...field}
+                                  name={[field.name, 'type']}
+                                  className={styles.inlineItem}
+                                  rules={formRules.selectTypeLimit}
+                                >
+                                  <Select
+                                    placeholder='类型'
+                                    options={typeData.type.map((typeName: string) => ({
+                                      value: typeName,
+                                      label: typeName
+                                    }))}
+                                  />
+                                </Form.Item>
+                              </div>
+
+                              <div className={styles.tableCell} style={{ width: 130, minWidth: 130 }}>
+                                <Form.Item
+                                  {...field}
+                                  name={[field.name, 'steel_type']}
+                                  className={styles.inlineItem}
+                                  rules={formRules.selectSteelTypeLimit}
+                                >
+                                  <Select
+                                    placeholder='钢号'
+                                    options={steeltypeData.type.map((steelTypeName: string) => ({
+                                      value: steelTypeName,
+                                      label: steelTypeName
+                                    }))}
+                                  />
+                                </Form.Item>
+                              </div>
+
+                              <div className={styles.tableCell} style={{ width: 96, minWidth: 96 }}>
+                                <Form.Item
+                                  {...field}
+                                  name={[field.name, 'length']}
+                                  className={styles.inlineItem}
+                                  rules={formRules.lengthLimit}
+                                >
+                                  <InputNumber {...decimalInputProps} placeholder='长' />
+                                </Form.Item>
+                              </div>
+
+                              <div className={styles.tableCell} style={{ width: 96, minWidth: 96 }}>
+                                <Form.Item
+                                  {...field}
+                                  name={[field.name, 'length_remain']}
+                                  className={styles.inlineItem}
+                                  rules={formRules.lengthRemainLimit}
+                                >
+                                  <InputNumber {...decimalInputProps} placeholder='余量' />
+                                </Form.Item>
+                              </div>
+
+                              <div
+                                className={`${styles.tableCell} ${isRoundSteel ? styles.emptyFieldCell : ''}`}
+                                style={{ width: 96, minWidth: 96 }}
+                              >
+                                {!isRoundSteel && (
+                                  <Form.Item {...field} name={[field.name, 'width']} className={styles.inlineItem}>
+                                    <InputNumber {...decimalInputProps} placeholder='宽' />
+                                  </Form.Item>
+                                )}
+                              </div>
+
+                              <div
+                                className={`${styles.tableCell} ${isRoundSteel ? styles.emptyFieldCell : ''}`}
+                                style={{ width: 96, minWidth: 96 }}
+                              >
+                                {!isRoundSteel && (
+                                  <Form.Item {...field} name={[field.name, 'width_remain']} className={styles.inlineItem}>
+                                    <InputNumber {...decimalInputProps} placeholder='余量' />
+                                  </Form.Item>
+                                )}
+                              </div>
+
+                              <div className={styles.tableCell} style={{ width: 108, minWidth: 108 }}>
+                                <Form.Item
+                                  {...field}
+                                  name={[field.name, 'thickness']}
+                                  className={styles.inlineItem}
+                                  rules={formRules.thicknessLimit}
+                                >
+                                  <InputNumber {...decimalInputProps} placeholder={thicknessPlaceholder} />
+                                </Form.Item>
+                              </div>
+
+                              <div className={styles.tableCell} style={{ width: 96, minWidth: 96 }}>
+                                <Form.Item
+                                  {...field}
+                                  name={[field.name, 'thickness_remain']}
+                                  className={styles.inlineItem}
+                                  rules={formRules.thicknessRemainLimit}
+                                >
+                                  <InputNumber {...decimalInputProps} placeholder='余量' />
+                                </Form.Item>
+                              </div>
+
+                              <div className={styles.tableCell} style={{ width: 90, minWidth: 90 }}>
+                                <Form.Item
+                                  {...field}
+                                  name={[field.name, 'amount']}
+                                  className={styles.inlineItem}
+                                  rules={formRules.amountLimit}
+                                >
+                                  <InputNumber {...integerInputProps} placeholder='数量' />
+                                </Form.Item>
+                              </div>
+
+                              <div className={styles.tableCell} style={{ width: 116, minWidth: 116 }}>
+                                <div className={styles.metricBox}>{renderMetricValue(weight)}</div>
+                              </div>
+
+                              <div className={styles.tableCell} style={{ width: 104, minWidth: 104 }}>
+                                <Form.Item
+                                  {...field}
+                                  name={[field.name, 'monovalent']}
+                                  className={styles.inlineItem}
+                                  rules={formRules.monovalentLimit}
+                                >
+                                  <InputNumber {...decimalInputProps} placeholder='单价' />
+                                </Form.Item>
+                              </div>
+
+                              <div className={styles.tableCell} style={{ width: 104, minWidth: 104 }}>
+                                <Form.Item
+                                  {...field}
+                                  name={[field.name, 'cut_fee']}
+                                  className={styles.inlineItem}
+                                  rules={formRules.cutFeeLimit}
+                                >
+                                  <InputNumber {...decimalInputProps} placeholder='刀费' />
+                                </Form.Item>
+                              </div>
+
+                              <div className={styles.tableCell} style={{ width: 116, minWidth: 116 }}>
+                                <div className={`${styles.metricBox} ${styles.metricAccent}`}>{renderMetricValue(amountMoney)}</div>
+                              </div>
+
+                              <div className={styles.tableCell} style={{ width: 180, minWidth: 180 }}>
+                                <Form.Item {...field} name={[field.name, 'note']} className={styles.inlineItem}>
+                                  <Input placeholder='备注' />
+                                </Form.Item>
+                              </div>
+
+                              <div className={styles.tableCell} style={{ width: 112, minWidth: 112 }}>
+                                <div className={styles.rowActions}>
+                                  <Button
+                                    type='text'
+                                    icon={<PlusOutlined />}
+                                    onClick={() => add({})}
+                                    className={styles.iconButton}
+                                  />
+                                  <Button
+                                    danger
+                                    type='text'
+                                    icon={<DeleteOutlined />}
+                                    onClick={() => remove(field.name)}
+                                    disabled={fields.length === 1}
+                                    className={styles.iconButton}
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className={styles.tableFooter}>
+                    <Button type='dashed' onClick={() => add({})} icon={<PlusOutlined />}>
+                      添加新行
+                    </Button>
+                    <div className={styles.summaryBar}>
+                      <div className={styles.summaryItem}>
+                        <span className={styles.summaryLabel}>总重量</span>
+                        <strong>{renderMetricValue(summary.totalWeight)} kg</strong>
+                      </div>
+                      <div className={styles.summaryItem}>
+                        <span className={styles.summaryLabel}>材料金额</span>
+                        <strong>{renderMetricValue(summary.totalAmount)}</strong>
+                      </div>
+                      <div className={styles.summaryItem}>
+                        <span className={styles.summaryLabel}>应收合计</span>
+                        <strong>{renderMetricValue(totalPayable)}</strong>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
+            </Form.List>
+          </Card>
+
+          <Form.Item className={styles.actionBar}>
+            <Button type='primary' onClick={handleAddOrder}>
               提交
             </Button>
-            <Button style={{ marginLeft: '12px' }} onClick={resetForm}>
-              重置
-            </Button>
+            <Button onClick={resetForm}>重置</Button>
           </Form.Item>
         </Form>
       </Card>
-    </PageWrapper>
+    </div>
   )
 }
 

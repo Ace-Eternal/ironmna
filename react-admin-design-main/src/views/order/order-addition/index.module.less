@@ -1,0 +1,238 @@
+.pageShell {
+  width: 100%;
+}
+
+.pageCard {
+  border-radius: 14px;
+}
+
+.pageHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
+
+.pageTitle {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #1f1f1f;
+}
+
+.pageDesc {
+  margin: 6px 0 0;
+  color: #8c8c8c;
+  font-size: 13px;
+}
+
+.form {
+  width: 100%;
+}
+
+.sectionCard {
+  margin-bottom: 16px;
+  border-radius: 12px;
+  border: 1px solid #f0f0f0;
+}
+
+.tableScroller {
+  overflow-x: auto;
+  overflow-y: visible;
+  padding-bottom: 4px;
+}
+
+.materialTable {
+  border: 1px solid #f0f0f0;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.tableHead {
+  display: flex;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #fafafa;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.headCell {
+  flex: 0 0 auto;
+  padding: 12px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #595959;
+  text-align: center;
+  border-right: 1px solid #f5f5f5;
+}
+
+.headCell:last-child {
+  border-right: 0;
+}
+
+.tableBody {
+  background: #fff;
+}
+
+.tableRow {
+  display: flex;
+  align-items: stretch;
+  border-bottom: 1px solid #f5f5f5;
+}
+
+.tableRow:nth-child(even) {
+  background: #fcfcfc;
+}
+
+.tableRow:last-child {
+  border-bottom: 0;
+}
+
+.tableCell {
+  flex: 0 0 auto;
+  padding: 10px 8px;
+  border-right: 1px solid #f5f5f5;
+}
+
+.tableCell:last-child {
+  border-right: 0;
+}
+
+.emptyFieldCell {
+  background: #fafafa;
+}
+
+.inlineItem {
+  margin-bottom: 0;
+}
+
+.inlineItem :global(.ant-form-item-explain) {
+  font-size: 11px;
+}
+
+.inlineItem :global(.ant-input-number),
+.inlineItem :global(.ant-select-selector),
+.inlineItem :global(.ant-input) {
+  border-radius: 8px;
+}
+
+.inlineItem :global(.ant-input-number) {
+  width: 100%;
+}
+
+.inlineItem :global(.ant-input-number-input-wrap) {
+  width: 100%;
+}
+
+.inlineItem :global(.ant-input-number-input) {
+  padding-right: 11px;
+  padding-left: 11px;
+  text-align: left;
+}
+
+.inlineItem :global(.ant-input-number-handler-wrap) {
+  display: none;
+}
+
+.metricBox {
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: #f5f5f5;
+  color: #262626;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.metricAccent {
+  background: #f6ffed;
+  color: #237804;
+}
+
+.rowActions {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.iconButton {
+  width: 36px;
+  height: 32px;
+  border-radius: 8px;
+  background: #fff;
+  border: 1px solid #f0f0f0;
+}
+
+.tableFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+
+.summaryBar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.summaryItem {
+  min-width: 132px;
+  padding: 10px 14px;
+  background: #fafafa;
+  border: 1px solid #f0f0f0;
+  border-radius: 10px;
+}
+
+.summaryLabel {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 12px;
+  color: #8c8c8c;
+}
+
+.actionBar {
+  margin-top: 20px;
+  margin-bottom: 0;
+  text-align: center;
+}
+
+.actionBar :global(.ant-btn) {
+  min-width: 96px;
+  margin: 0 6px;
+}
+
+.fullWidth {
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .pageHeader {
+    margin-bottom: 16px;
+  }
+
+  .pageTitle {
+    font-size: 18px;
+  }
+
+  .tableFooter {
+    align-items: flex-start;
+  }
+
+  .summaryBar {
+    width: 100%;
+  }
+
+  .summaryItem {
+    flex: 1 1 140px;
+  }
+}
