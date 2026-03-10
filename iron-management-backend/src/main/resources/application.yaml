@@ -1,18 +1,21 @@
 server:
-  port: 8888
+  port: ${SERVER_PORT:8888}
   servlet:
-    context-path: /iron
+    context-path: ${SERVER_CONTEXT_PATH:/iron}
 spring:
-  datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://106.54.35.68:3306/iron_management
-    username: root
-    password: Msk@13819960633
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
 mybatis-plus:
   global-config:
     db-config:
-      logic-delete-field: is_deleted # ?????????
-      logic-delete-value: 1 # ?????????????? 1
-      logic-not-delete-value: 0 # ?????????????? 0
+      logic-delete-field: is_deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
   configuration:
     map-underscore-to-camel-case: false
+app:
+  cors:
+    allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:http://localhost:8201,http://127.0.0.1:8201}
+  resources:
+    template-path: ${APP_TEMPLATE_PATH:../word-template/template.docx}
+    export-dir: ${APP_EXPORT_DIR:${java.io.tmpdir}/ironman-exports}

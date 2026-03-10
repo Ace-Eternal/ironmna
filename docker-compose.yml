@@ -1,0 +1,50 @@
+version: "3.9"
+
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: ironman-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: iron_management
+      MYSQL_ROOT_HOST: "%"
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+
+  backend:
+    build:
+      context: ./iron-management-backend
+    container_name: ironman-backend
+    depends_on:
+      - mysql
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SERVER_PORT: 8888
+      SERVER_CONTEXT_PATH: /iron
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: iron_management
+      DB_USERNAME: root
+      DB_PASSWORD: root
+      APP_TEMPLATE_PATH: /opt/ironman/resources/template.docx
+      APP_EXPORT_DIR: /tmp/ironman-exports
+      APP_CORS_ALLOWED_ORIGINS: http://localhost:8201
+    volumes:
+      - ./word-template/template.docx:/opt/ironman/resources/template.docx:ro
+    ports:
+      - "8888:8888"
+
+  frontend:
+    build:
+      context: ./react-admin-design-main
+    container_name: ironman-frontend
+    depends_on:
+      - backend
+    ports:
+      - "8201:80"
+
+volumes:
+  mysql-data:

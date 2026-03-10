@@ -1,15 +1,15 @@
 # progress-tracker
 
-## 适用场景
-- 记录关键问题、方案和复盘沉淀。
+## Use Cases
+- Record key issues, decisions, and retrospective notes.
 
-## 输入
+## Inputs
 - Event summary and affected areas.
 - Related commit metadata.
 
-## 输出
+## Outputs
 - A progress entry and TOC update.
 
-## 执行约束
+## Execution Constraints
 - `Related Commit Message` is mandatory.
 - Keep entry structure aligned with `.agents/PROGRESS.md`.

@@ -2,6 +2,7 @@ import type { MenuModeEnum, MenuTypeEnum, MenuFoldBtnEnum } from '../enums/menuE
 import type { PageTransitionEnum, ThemeEnum } from '../enums/appEnum'
 import type { PermissionModeEnum } from '../enums/appEnum'
 import type { CacheTypeEnum } from '../enums/cacheEnum'
+import { getApiBaseUrl } from '@/app/config/env'
 
 export interface AppConfig {
   // Theme color
@@ -83,7 +84,7 @@ export interface TransitionSetting {
   basicTransition: PageTransitionEnum
 }
 
-//base Url
-export const BASE_URL = 'http://106.54.35.68:8888/iron'
+// Kept for compatibility with existing pages.
+export const BASE_URL = getApiBaseUrl()
 
 export const getBaseUrl = () => BASE_URL

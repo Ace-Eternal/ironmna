@@ -16,7 +16,21 @@ export default ({ command, mode }: ConfigEnv): UserConfig => {
 
   // this function can be converted to different typings
   const viteEnv: any = wrapperEnv(env)
-  const { VITE_PORT, VITE_DROP_CONSOLE } = viteEnv
+  const { VITE_PORT, VITE_PROXY, VITE_DROP_CONSOLE } = viteEnv
+
+  const proxy = (VITE_PROXY || []).reduce((acc: Record<string, any>, item: [string, string]) => {
+    const [prefix, target] = item
+    if (!prefix || !target) {
+      return acc
+    }
+
+    acc[prefix] = {
+      target,
+      changeOrigin: true
+    }
+
+    return acc
+  }, {})
 
   return {
     base: './',
@@ -24,7 +38,8 @@ export default ({ command, mode }: ConfigEnv): UserConfig => {
       // Listening on all local ips
       host: true,
       open: true,
-      port: VITE_PORT
+      port: VITE_PORT,
+      proxy
     },
     plugins: [
       react(),

@@ -12,14 +12,26 @@ export default ({ command, mode }) => {
     const env = loadEnv(mode, root);
     // this function can be converted to different typings
     const viteEnv = wrapperEnv(env);
-    const { VITE_PORT, VITE_DROP_CONSOLE } = viteEnv;
+    const { VITE_PORT, VITE_PROXY, VITE_DROP_CONSOLE } = viteEnv;
+    const proxy = (VITE_PROXY || []).reduce((acc, item) => {
+        const [prefix, target] = item;
+        if (!prefix || !target) {
+            return acc;
+        }
+        acc[prefix] = {
+            target,
+            changeOrigin: true
+        };
+        return acc;
+    }, {});
     return {
         base: './',
         server: {
             // Listening on all local ips
             host: true,
             open: true,
-            port: VITE_PORT
+            port: VITE_PORT,
+            proxy
         },
         plugins: [
             react(),

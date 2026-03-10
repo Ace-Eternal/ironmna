@@ -1,41 +1,28 @@
 package com.example.controller;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.example.domain.Admin;
+import com.example.admin.application.AdminApplicationService;
 import com.example.dto.AdminDTO;
 import com.example.dto.Result;
-import com.example.service.AdminService;
 import com.example.vo.AdminVO;
-import jakarta.annotation.Resource;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 @RequestMapping("/admin")
 @RestController
-@CrossOrigin("*")
+@RequiredArgsConstructor
 public class AdminController {
 
-    @Resource
-    AdminService adminService;
+    private final AdminApplicationService adminApplicationService;
 
     @PostMapping("/login")
-    public Result login(@RequestBody AdminVO adminVO){
-        QueryWrapper<Admin>queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("username", adminVO.getUsername());
-        queryWrapper.eq("password", adminVO.getPassword());
-        Admin res = adminService.getOne(queryWrapper);
-        AdminDTO dto = new AdminDTO(res.getId().toString(),res.getUsername(),res.getRealname()
-        ,res.getAvatar(),res.getToken(),res.getDescp(),res.getHomepath(),res.getPassword());
-        return Result.ok("登录成功", dto);
+    public Result login(@RequestBody AdminVO adminVO) {
+        AdminDTO dto = adminApplicationService.login(adminVO);
+        return Result.ok("鐧诲綍鎴愬姛", dto);
     }
 
     @GetMapping("/getUserInfo")
-    public Result getUserInfo(@RequestHeader("Authorization") String token){
-        QueryWrapper<Admin>queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("token", token);
-        Admin res = adminService.getOne(queryWrapper);
-        AdminDTO dto = new AdminDTO(res.getId().toString(),res.getUsername(),res.getRealname()
-                ,res.getAvatar(),res.getToken(),res.getDescp(),res.getHomepath(),res.getPassword());
-        return Result.ok("获取用户信息成功", dto);
+    public Result getUserInfo(@RequestHeader("Authorization") String token) {
+        AdminDTO dto = adminApplicationService.getUserInfo(token);
+        return Result.ok("鑾峰彇鐢ㄦ埛淇℃伅鎴愬姛", dto);
     }
-
 }

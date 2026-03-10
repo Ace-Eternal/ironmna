@@ -4,6 +4,7 @@ interface ViteEnv {
   VITE_PORT: number
   VITE_PROXY: [string, string][]
   VITE_DROP_CONSOLE: boolean
+  VITE_API_BASE_URL: string
 }
 
 // read all environment variable configuration files to process.env

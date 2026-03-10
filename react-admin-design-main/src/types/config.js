@@ -1,3 +1,3 @@
-//base Url
-export const BASE_URL = 'http://106.54.35.68:8888/iron';
+// Base URL is injected by Vite env files for each environment.
+export const BASE_URL = import.meta.env.VITE_API_BASE_URL || '/iron';
 export const getBaseUrl = () => BASE_URL;

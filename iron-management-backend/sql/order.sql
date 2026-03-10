@@ -1,4 +1,4 @@
-create table `order`
+create table t_order
 (
     id          bigint auto_increment
         primary key,
@@ -19,4 +19,3 @@ create table `order`
 '
 )
     comment '下的每一副材料';
-
