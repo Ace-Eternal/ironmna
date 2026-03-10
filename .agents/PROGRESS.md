@@ -24,3 +24,4 @@
 ## Global TOC
 | Page ID | Date | Title | Path | Related Commit Message | Related Commit Hash |
 | --- | --- | --- | --- | --- | --- |
+| 20260310-1 | 2026-03-10 | 优化账单页与侧边栏 | [.agents/progress/entries/2026/2026-03-10-1.md](D:/iscas2025/code/ironman/.agents/progress/entries/2026/2026-03-10-1.md) | `feat(order): 优化账单详情页编辑体验并精简侧边栏菜单` | |
