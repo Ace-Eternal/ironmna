@@ -10,7 +10,8 @@ const FormRoute = {
     meta: {
         title: '表单',
         icon: 'form',
-        orderNo: 2
+        orderNo: 2,
+        hideMenu: true
     },
     children: [
         {

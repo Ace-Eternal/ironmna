@@ -10,7 +10,8 @@ const CompoRoute = {
     meta: {
         title: '组件',
         icon: 'compo',
-        orderNo: 6
+        orderNo: 6,
+        hideMenu: true
     },
     children: [
         {

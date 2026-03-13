@@ -10,7 +10,8 @@ const FlowEditorRoute = {
     meta: {
         title: '流程图编辑器',
         icon: 'flow',
-        orderNo: 8
+        orderNo: 8,
+        hideMenu: true
     },
     children: [
         {
