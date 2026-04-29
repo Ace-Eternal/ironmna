@@ -1,10 +1,11 @@
-import type { FC } from 'react'
+import type { FC, ReactNode } from 'react'
 import type { Rule } from 'antd/es/form'
 import type { InputNumberProps } from 'antd'
+import type { ColumnsType } from 'antd/es/table'
 import { useEffect, useState } from 'react'
-import { Button, Card, Col, Form, Input, InputNumber, Row, Select, message } from 'antd'
-import { DeleteOutlined, PlusOutlined } from '@ant-design/icons'
-import { createOrder, getCustomerNameList } from '@/api'
+import { Alert, Button, Card, Col, Form, Input, InputNumber, Modal, Row, Select, Space, Table, Tag, Upload, message } from 'antd'
+import { DeleteOutlined, PlusOutlined, UploadOutlined } from '@ant-design/icons'
+import { createOrder, getCustomerNameList, recognizeMaterialSheet } from '@/api'
 import { steeltypeData, typeData } from './data'
 import type { APIResult, CustomerDataType } from './types'
 import styles from './index.module.less'
@@ -27,6 +28,31 @@ type MaterialColumn = {
   key: MaterialFieldName | 'weight' | 'amount_money' | 'actions'
   label: string
   width: number
+}
+
+type RecognizedMaterialItem = {
+  rowIndex: number
+  type?: string
+  steel_type?: string
+  length: number
+  length_remain: number
+  width: number
+  width_remain: number
+  thickness: number
+  thickness_remain: number
+  amount: number
+  monovalent: number
+  cut_fee: number
+  note?: string
+  fieldConfidences?: Record<string, number>
+  needsReviewFields?: string[]
+  sourceNote?: string
+}
+
+type MaterialSheetRecognitionResult = {
+  items: RecognizedMaterialItem[]
+  overallConfidence: number
+  warnings: string[]
 }
 
 const materialColumns: MaterialColumn[] = [
@@ -120,6 +146,11 @@ const integerInputProps: InputNumberProps = {
 const BasicForm: FC = () => {
   const [form] = Form.useForm()
   const [customers, setCustomers] = useState<CustomerDataType[]>([])
+  const [recognizing, setRecognizing] = useState(false)
+  const [previewOpen, setPreviewOpen] = useState(false)
+  const [recognizedItems, setRecognizedItems] = useState<RecognizedMaterialItem[]>([])
+  const [recognitionWarnings, setRecognitionWarnings] = useState<string[]>([])
+  const [recognitionConfidence, setRecognitionConfidence] = useState(0)
 
   useEffect(() => {
     const fetchCustomers = async () => {
@@ -133,6 +164,93 @@ const BasicForm: FC = () => {
 
   const resetForm = () => {
     form.resetFields()
+  }
+
+  const normalizeRecognizedItems = (items: RecognizedMaterialItem[]) =>
+    items.map((item, index) => ({
+      ...item,
+      rowIndex: item.rowIndex || index + 1,
+      length: getNumberValue(item.length),
+      length_remain: getNumberValue(item.length_remain),
+      width: item.type === ROUND_STEEL ? 0 : getNumberValue(item.width),
+      width_remain: item.type === ROUND_STEEL ? 0 : getNumberValue(item.width_remain),
+      thickness: getNumberValue(item.thickness),
+      thickness_remain: getNumberValue(item.thickness_remain),
+      amount: getNumberValue(item.amount),
+      monovalent: getNumberValue(item.monovalent),
+      cut_fee: getNumberValue(item.cut_fee),
+      needsReviewFields: item.needsReviewFields || [],
+      fieldConfidences: item.fieldConfidences || {}
+    }))
+
+  const handleRecognizeMaterialSheet = async (file: File) => {
+    setRecognizing(true)
+    const formData = new FormData()
+    formData.append('file', file)
+
+    try {
+      const data = (await recognizeMaterialSheet(formData)) as unknown as MaterialSheetRecognitionResult
+      setRecognizedItems(normalizeRecognizedItems(data.items || []))
+      setRecognitionWarnings(data.warnings || [])
+      setRecognitionConfidence(getNumberValue(data.overallConfidence))
+      setPreviewOpen(true)
+    } catch (error) {
+      const fallback = error instanceof Error ? error.message : '材料单识别失败'
+      message.error(fallback)
+    } finally {
+      setRecognizing(false)
+    }
+  }
+
+  const updateRecognizedItem = (index: number, field: keyof RecognizedMaterialItem, value: unknown) => {
+    setRecognizedItems(prev =>
+      prev.map((item, itemIndex) => {
+        if (itemIndex !== index) {
+          return item
+        }
+
+        const nextItem = {
+          ...item,
+          [field]: value,
+          needsReviewFields: (item.needsReviewFields || []).filter(reviewField => reviewField !== field)
+        }
+
+        if (field === 'type' && value === ROUND_STEEL) {
+          nextItem.width = 0
+          nextItem.width_remain = 0
+        }
+
+        return nextItem
+      })
+    )
+  }
+
+  const hasReviewField = (record: RecognizedMaterialItem, field: keyof RecognizedMaterialItem) =>
+    Boolean(record.needsReviewFields?.includes(String(field)))
+
+  const renderPreviewCell = (children: ReactNode, record: RecognizedMaterialItem, field: keyof RecognizedMaterialItem) => (
+    <div className={hasReviewField(record, field) ? styles.reviewCell : undefined}>{children}</div>
+  )
+
+  const confirmRecognizedItems = () => {
+    form.setFieldsValue({
+      orderItems: recognizedItems.map(item => ({
+        type: item.type,
+        steel_type: item.steel_type,
+        length: getNumberValue(item.length),
+        length_remain: getNumberValue(item.length_remain),
+        width: item.type === ROUND_STEEL ? 0 : getNumberValue(item.width),
+        width_remain: item.type === ROUND_STEEL ? 0 : getNumberValue(item.width_remain),
+        thickness: getNumberValue(item.thickness),
+        thickness_remain: getNumberValue(item.thickness_remain),
+        amount: getNumberValue(item.amount),
+        monovalent: getNumberValue(item.monovalent),
+        cut_fee: getNumberValue(item.cut_fee),
+        note: item.note
+      }))
+    })
+    setPreviewOpen(false)
+    message.success('已填入材料明细，请检查高亮字段')
   }
 
   const handleAddOrder = async () => {
@@ -176,6 +294,106 @@ const BasicForm: FC = () => {
   )
 
   const totalPayable = summary.totalAmount + processFee
+
+  const previewColumns: ColumnsType<RecognizedMaterialItem> = [
+    {
+      title: '行',
+      dataIndex: 'rowIndex',
+      width: 64,
+      fixed: 'left'
+    },
+    {
+      title: '类型',
+      dataIndex: 'type',
+      width: 120,
+      render: (_, record, index) =>
+        renderPreviewCell(
+          <Select
+            className={styles.fullWidth}
+            placeholder='类型'
+            value={record.type}
+            options={typeData.type.map((typeName: string) => ({ value: typeName, label: typeName }))}
+            onChange={value => updateRecognizedItem(index, 'type', value)}
+          />,
+          record,
+          'type'
+        )
+    },
+    {
+      title: '钢号',
+      dataIndex: 'steel_type',
+      width: 130,
+      render: (_, record, index) =>
+        renderPreviewCell(
+          <Select
+            showSearch
+            className={styles.fullWidth}
+            placeholder='钢号'
+            value={record.steel_type}
+            options={steeltypeData.type.map((steelTypeName: string) => ({ value: steelTypeName, label: steelTypeName }))}
+            onChange={value => updateRecognizedItem(index, 'steel_type', value)}
+          />,
+          record,
+          'steel_type'
+        )
+    },
+    ...([
+      ['length', '长'],
+      ['length_remain', '长余量'],
+      ['width', '宽'],
+      ['width_remain', '宽余量'],
+      ['thickness', '厚/直径'],
+      ['thickness_remain', '厚余量'],
+      ['amount', '数量'],
+      ['monovalent', '单价'],
+      ['cut_fee', '刀费']
+    ] as Array<[keyof RecognizedMaterialItem, string]>).map(([field, title]) => ({
+      title,
+      dataIndex: field,
+      width: 110,
+      render: (_: unknown, record: RecognizedMaterialItem, index: number) =>
+        renderPreviewCell(
+          <InputNumber
+            {...(field === 'amount' ? integerInputProps : decimalInputProps)}
+            disabled={record.type === ROUND_STEEL && (field === 'width' || field === 'width_remain')}
+            value={record[field] as number}
+            onChange={value => updateRecognizedItem(index, field, value)}
+          />,
+          record,
+          field
+        )
+    })),
+    {
+      title: '备注',
+      dataIndex: 'note',
+      width: 180,
+      render: (_, record, index) =>
+        renderPreviewCell(
+          <Input value={record.note} placeholder='备注' onChange={event => updateRecognizedItem(index, 'note', event.target.value)} />,
+          record,
+          'note'
+        )
+    },
+    {
+      title: '待确认',
+      dataIndex: 'needsReviewFields',
+      width: 180,
+      render: (_, record) => (
+        <Space size={[4, 4]} wrap>
+          {(record.needsReviewFields || []).map(field => (
+            <Tag key={field} color='orange'>
+              {field}
+            </Tag>
+          ))}
+        </Space>
+      )
+    },
+    {
+      title: '模型备注',
+      dataIndex: 'sourceNote',
+      width: 220
+    }
+  ]
 
   return (
     <div className={styles.pageShell}>
@@ -227,7 +445,25 @@ const BasicForm: FC = () => {
             </Row>
           </Card>
 
-          <Card size='small' className={styles.sectionCard} title='材料明细'>
+          <Card
+            size='small'
+            className={styles.sectionCard}
+            title='材料明细'
+            extra={
+              <Upload
+                accept='image/png,image/jpeg,image/webp'
+                showUploadList={false}
+                beforeUpload={file => {
+                  void handleRecognizeMaterialSheet(file)
+                  return Upload.LIST_IGNORE
+                }}
+              >
+                <Button icon={<UploadOutlined />} loading={recognizing}>
+                  上传材料单识别
+                </Button>
+              </Upload>
+            }
+          >
             <Form.List name='orderItems'>
               {(fields, { add, remove }) => (
                 <>
@@ -470,6 +706,36 @@ const BasicForm: FC = () => {
           </Form.Item>
         </Form>
       </Card>
+
+      <Modal
+        title='材料单识别预览'
+        open={previewOpen}
+        width={1180}
+        okText='确认填入材料明细'
+        cancelText='取消'
+        onOk={confirmRecognizedItems}
+        onCancel={() => setPreviewOpen(false)}
+        okButtonProps={{ disabled: recognizedItems.length === 0 }}
+      >
+        <Space direction='vertical' className={styles.fullWidth} size={12}>
+          <Alert
+            showIcon
+            type='info'
+            message={`整体置信度 ${(recognitionConfidence * 100).toFixed(0)}%，请重点检查高亮字段`}
+          />
+          {recognitionWarnings.length > 0 && (
+            <Alert showIcon type='warning' message='识别提示' description={recognitionWarnings.join('；')} />
+          )}
+          <Table
+            size='small'
+            rowKey={(record, index) => `${record.rowIndex}-${index}`}
+            columns={previewColumns}
+            dataSource={recognizedItems}
+            pagination={false}
+            scroll={{ x: 1500 }}
+          />
+        </Space>
+      </Modal>
     </div>
   )
 }

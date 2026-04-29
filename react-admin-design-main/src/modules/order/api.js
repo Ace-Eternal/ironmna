@@ -13,6 +13,13 @@ export function createOrder(data) {
         data
     });
 }
+export function recognizeMaterialSheet(data) {
+    return httpClient({
+        url: '/order/recognizeMaterialSheet',
+        method: 'post',
+        data
+    });
+}
 export function getOrderDetail(id) {
     return httpClient({
         url: `/order/getOrderDetail?id=${id}`,

@@ -17,6 +17,14 @@ export function createOrder(data: Order) {
   })
 }
 
+export function recognizeMaterialSheet(data: FormData) {
+  return httpClient({
+    url: '/order/recognizeMaterialSheet',
+    method: 'post',
+    data
+  })
+}
+
 export function getOrderDetail(id: number | string) {
   return httpClient({
     url: `/order/getOrderDetail?id=${id}`,

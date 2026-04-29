@@ -23,7 +23,10 @@ httpClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   if (token) {
     ;(config as Recordable).headers['Authorization'] = `${token}`
   }
-  ;(config as Recordable).headers['Content-Type'] = 'application/json'
+  const isFormData = typeof FormData !== 'undefined' && config.data instanceof FormData
+  if (!isFormData) {
+    ;(config as Recordable).headers['Content-Type'] = 'application/json'
+  }
   return config
 }, handleError)
 

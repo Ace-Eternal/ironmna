@@ -20,8 +20,11 @@ httpClient.interceptors.request.use((config) => {
         ;
         config.headers['Authorization'] = `${token}`;
     }
-    ;
-    config.headers['Content-Type'] = 'application/json';
+    const isFormData = typeof FormData !== 'undefined' && config.data instanceof FormData;
+    if (!isFormData) {
+        ;
+        config.headers['Content-Type'] = 'application/json';
+    }
     return config;
 }, handleError);
 httpClient.interceptors.response.use((response) => {

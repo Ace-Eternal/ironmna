@@ -19,3 +19,9 @@ app:
   resources:
     template-path: ${APP_TEMPLATE_PATH:../word-template/template.docx}
     export-dir: ${APP_EXPORT_DIR:${java.io.tmpdir}/ironman-exports}
+  material-recognition:
+    provider: ${MATERIAL_RECOGNITION_PROVIDER:openai}
+    base-url: ${MATERIAL_RECOGNITION_BASE_URL:https://api.openai.com/v1}
+    api-key: ${MATERIAL_RECOGNITION_API_KEY:}
+    model: ${MATERIAL_RECOGNITION_MODEL:gpt-4.1}
+    max-image-bytes: ${MATERIAL_RECOGNITION_MAX_IMAGE_BYTES:8388608}

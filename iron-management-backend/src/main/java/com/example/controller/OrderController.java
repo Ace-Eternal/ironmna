@@ -5,6 +5,8 @@ import com.example.domain.Order;
 import com.example.dto.PageResult;
 import com.example.dto.Result;
 import com.example.order.application.OrderApplicationService;
+import com.example.order.recognition.MaterialSheetRecognitionResult;
+import com.example.order.recognition.MaterialSheetRecognitionService;
 import com.example.vo.OrderVO;
 import com.example.vo.UpdateOrderVO;
 import lombok.RequiredArgsConstructor;
@@ -12,6 +14,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RequestMapping("/order")
 @RestController
@@ -19,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 public class OrderController {
 
     private final OrderApplicationService orderApplicationService;
+    private final MaterialSheetRecognitionService materialSheetRecognitionService;
 
     @GetMapping("/getOrderList")
     public Result getList(@RequestParam Integer current, @RequestParam Integer pageSize) {
@@ -36,6 +40,12 @@ public class OrderController {
     public Result createOrder(@RequestBody OrderVO orderVO) {
         Order order = orderApplicationService.createOrder(orderVO);
         return Result.ok("鍒涘缓璁㈠崟鎴愬姛", order);
+    }
+
+    @PostMapping("/recognizeMaterialSheet")
+    public Result recognizeMaterialSheet(@RequestParam("file") MultipartFile file) {
+        MaterialSheetRecognitionResult recognitionResult = materialSheetRecognitionService.recognize(file);
+        return Result.ok("材料单识别成功", recognitionResult);
     }
 
     @PostMapping("/deleteOrder")
