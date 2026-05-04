@@ -28,6 +28,7 @@ Current production layout:
 - Backend jar: `/home/ubuntu/ironman/react/Iron_Management_Backend-0.0.1-SNAPSHOT.jar`
 - Frontend static files: `/home/ubuntu/ironman/react/dist`
 - Nginx serves `/home/ubuntu/ironman/react/dist` and proxies `/iron/` to `http://127.0.0.1:8888/iron/`
+- Nginx redirects root `/` to `/login#/login` so users who enter `http://106.54.35.68/` land on the login page.
 - Word template: `/home/ubuntu/ironman/react/template.docx`
 - Backend export directory: `/tmp/ironman-exports`
 
@@ -134,10 +135,13 @@ systemctl reload nginx
 Run these checks from the server or local machine:
 
 ```bash
+curl -I http://106.54.35.68/
 curl -fsS http://127.0.0.1:8888/iron/dashboard/home
 curl -fsS http://127.0.0.1/
 curl -fsS http://106.54.35.68/iron/dashboard/home
 ```
+
+The root check must return `302` with `Location: http://106.54.35.68/login#/login`.
 
 Check the backend process and logs:
 
@@ -154,5 +158,90 @@ Rollback uses the latest backup under:
 
 ## Delivery Notes
 - Keep the frontend proxy at `/iron` so local dev and container deployment share the same API path.
+- Keep Vite `base` as `/` for production. Do not use `./`, because refreshing nested frontend routes such as `/login` or `/home` makes the browser request `/login/assets/...`; Nginx then returns `index.html` instead of JavaScript and the page becomes blank.
 - Avoid embedding host-specific absolute paths in backend code.
 - For production, replace default passwords and mount persistent database storage.
+
+## Production Troubleshooting Notes
+
+### Blank Page After Deployment
+
+Symptom:
+
+- `http://106.54.35.68/` returns HTML or `200 OK`, but the browser page is blank.
+- Backend APIs such as `/iron/dashboard/home` still return normally.
+- Direct frontend routes such as `/login` or `/home` may return HTML, but JavaScript does not run.
+
+Root cause from the 2026-05-04 incident:
+
+- Vite was built with `base: './'`.
+- The generated HTML referenced JavaScript and CSS as `./assets/...`.
+- When a user refreshed a nested frontend route, for example `/login`, the browser requested `/login/assets/...`.
+- Nginx SPA fallback returned `index.html` for that missing asset path.
+- The browser tried to load HTML as a JavaScript module, so React never mounted and the page stayed blank.
+
+Fix:
+
+- Keep `react-admin-design-main/vite.config.ts` production `base` as `/`.
+- Rebuild locally with `pnpm build`.
+- Upload and replace only the built `dist` on the server.
+- Do not build on the server, because server memory is insufficient.
+
+Verification:
+
+```bash
+curl -I http://106.54.35.68/assets/<current-entry>.js
+curl -I http://106.54.35.68/login
+curl -I http://106.54.35.68/home
+```
+
+Expected result:
+
+- The asset request returns `Content-Type: application/javascript`.
+- `/login` and `/home` return `index.html` that references `/assets/...`, not `./assets/...`.
+
+### Root URL Does Not Open Login
+
+Symptom:
+
+- `http://106.54.35.68/login#/login` works.
+- `http://106.54.35.68/` does not show the login page as expected.
+
+Root cause from the 2026-05-04 incident:
+
+- The app uses hash routing.
+- The production entry URL expected by users is the bare root `/`.
+- Root handling was not explicit enough at the Nginx layer.
+
+Fix:
+
+- Add an exact-match root redirect in Nginx:
+
+```nginx
+location = / {
+  return 302 /login#/login;
+}
+```
+
+- Keep this rule before the generic SPA fallback:
+
+```nginx
+location / {
+  try_files $uri $uri/ /index.html;
+}
+```
+
+Verification:
+
+```bash
+curl -I http://106.54.35.68/
+curl -I http://106.54.35.68/login
+curl -fsS http://106.54.35.68/iron/dashboard/home
+```
+
+Expected result:
+
+- `/` returns `302`.
+- `Location` is `http://106.54.35.68/login#/login`.
+- `/login` returns `200 OK`.
+- `/iron/dashboard/home` returns `code=0`.

@@ -9,3 +9,6 @@
 - 2026-05-04 Codex：执行 `mvn test`、`pnpm build` 和本地接口冒烟验证。
 - 2026-05-04 Codex：按用户要求在本地执行 `mvn clean package -DskipTests` 和 `pnpm build`，上传 jar 与前端 dist 包到服务器，服务器仅替换产物并重启服务，未执行服务器构建。
 - 2026-05-04 Codex：更新 `DEPLOYMENT.md`，沉淀生产部署流程，并明确服务器内存不足，必须本地打包，禁止服务器构建。
+- 2026-05-04 Codex：排查公网空白页，确认 Vite 相对资源路径导致嵌套路由刷新时 JS 加载为 HTML；将 `base` 改为 `/`，本地重打前端并仅替换服务器 dist。
+- 2026-05-04 Codex：按用户要求将公网根路径 `/` 在 Nginx 层重定向到 `/login#/login`，并同步更新仓库 Nginx 模板和验证文档。
+- 2026-05-04 Codex：将空白页排查、Vite `base` 规则、根路径登录重定向和验证命令沉淀到 `DEPLOYMENT.md`。

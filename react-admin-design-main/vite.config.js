@@ -25,7 +25,7 @@ export default ({ command, mode }) => {
         return acc;
     }, {});
     return {
-        base: './',
+        base: '/',
         server: {
             // Listening on all local ips
             host: true,

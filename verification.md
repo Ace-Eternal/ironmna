@@ -29,3 +29,25 @@
 - 备份目录：`/home/ubuntu/ironman/react/backups/20260504211904`
 - 公网前端：`http://106.54.35.68/` 返回 `200 OK`
 - 公网接口：`http://106.54.35.68/iron/dashboard/home` 返回 `code=0`
+
+## 前端空白页修复验证
+
+- 日期：2026-05-04
+- 执行者：Codex
+- 原因：生产 HTML 使用 `./assets/...` 相对资源路径，刷新 `/login`、`/home` 等前端路由时会请求 `/login/assets/...` 或 `/home/assets/...`，Nginx 返回 `index.html`，浏览器无法按 JavaScript 模块加载，导致空白页。
+- 修复：将 Vite `base` 调整为 `/`，本地重新执行 `pnpm build`，仅上传并替换服务器前端 `dist`，未在服务器构建。
+- 验证：`http://106.54.35.68/`、`http://106.54.35.68/login`、`http://106.54.35.68/home` 均返回引用 `/assets/...` 的 HTML；`/assets/index-5a21fae8.js` 返回 `Content-Type: application/javascript`。
+
+## 根路径登录重定向验证
+
+- 日期：2026-05-04
+- 执行者：Codex
+- 修复：线上 Nginx `location = /` 返回 `302 /login#/login`；仓库 Nginx 模板同步增加该规则。
+- 验证：`curl -I http://106.54.35.68/` 返回 `302 Moved Temporarily`，`Location: http://106.54.35.68/login#/login`；`http://106.54.35.68/login` 返回 `200 OK`；`/iron/dashboard/home` 仍返回 `code=0`。
+
+## 经验沉淀
+
+- 前端空白页不要只看 `/` 是否返回 `200 OK`，还必须检查入口 JS 的 `Content-Type` 是否为 `application/javascript`。
+- Vite 单页应用部署在域名根路径时，生产 `base` 应保持为 `/`，避免嵌套路由刷新后资源路径变成 `/login/assets/...`。
+- 用户入口是裸域名或裸 IP 时，Nginx 应显式配置 `location = /` 重定向到登录页，避免依赖前端运行后再跳转。
+- 每次替换前端 `dist` 后，应同时验证 `/`、`/login`、`/home` 和 `/iron/dashboard/home`。
