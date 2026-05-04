@@ -25,8 +25,13 @@ public class OrderController {
     private final MaterialSheetRecognitionService materialSheetRecognitionService;
 
     @GetMapping("/getOrderList")
-    public Result getList(@RequestParam Integer current, @RequestParam Integer pageSize) {
-        PageResult pageResult = orderApplicationService.getOrderList(current, pageSize);
+    public Result getList(@RequestParam Integer current,
+                          @RequestParam Integer pageSize,
+                          @RequestParam(required = false) Long customerId,
+                          @RequestParam(required = false) String month,
+                          @RequestParam(required = false) String materialType,
+                          @RequestParam(required = false) String steelType) {
+        PageResult pageResult = orderApplicationService.getOrderList(current, pageSize, customerId, month, materialType, steelType);
         return pageResult != null ? Result.ok("鑾峰彇璐﹀崟鎴愬姛", pageResult) : Result.fail("鑾峰彇璐﹀崟澶辫触");
     }
 

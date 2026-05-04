@@ -34,17 +34,38 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order>
 
     @Override
     public PageResult pageWithCustomer(int current, int pageSize) {
-        // 计算分页偏移量
+        return pageWithCustomer(current, pageSize, null, null, null, null);
+    }
+
+    @Override
+    public PageResult pageWithCustomer(int current, int pageSize, Long customerId, String month, String materialType, String steelType) {
+        // 计算分页偏移量，并透传首页图表带来的筛选条件。
         long offset = (long) (current - 1) * pageSize;
 
-        // 查询当前页数据
-        List<Map<String, Object>> records = orderMapper.selectOrderWithCustomer(offset, pageSize);
+        List<Map<String, Object>> records = orderMapper.selectOrderWithCustomer(
+                offset,
+                pageSize,
+                customerId,
+                month,
+                normalizeFilter(materialType),
+                normalizeFilter(steelType)
+        );
 
-        // 查询总记录数
-        long total = orderMapper.selectOrderCount();
+        long total = orderMapper.selectOrderCount(
+                customerId,
+                month,
+                normalizeFilter(materialType),
+                normalizeFilter(steelType)
+        );
 
-        // 构建分页结果
         return new PageResult(records, total, current, pageSize);
+    }
+
+    private String normalizeFilter(String value) {
+        if (value == null || value.trim().isEmpty()) {
+            return null;
+        }
+        return value.trim();
     }
 }
 

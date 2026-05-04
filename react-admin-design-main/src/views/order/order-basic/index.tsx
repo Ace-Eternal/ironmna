@@ -20,14 +20,22 @@ import { TABLE_COMPO } from '@/settings/websiteSetting'
 import { deleteOrder, getOrderDetail, getOrderList, updateCustomer } from '@/api'
 import { PageWrapper } from '@/components/Page'
 import type { APIResult, PageState, TableDataType } from './types'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { message } from 'antd'
 
 const CustomerTable: FC = () => {
+  const [searchParams] = useSearchParams()
   const [tableLoading, setTableLoading] = useState(false)
   const [tableData, setTableData] = useState<TableDataType[]>([])
   const [tableTotal, setTableTotal] = useState<number>(0)
-  const [tableQuery, setTableQuery] = useState<PageState>({ current: 1, pageSize: 10 })
+  const [tableQuery, setTableQuery] = useState<PageState>(() => ({
+    current: 1,
+    pageSize: 10,
+    customerId: searchParams.get('customerId') || undefined,
+    month: searchParams.get('month') || undefined,
+    materialType: searchParams.get('materialType') || undefined,
+    steelType: searchParams.get('steelType') || undefined
+  }))
 
   const [form] = Form.useForm()
   const [modalVisibel, setModalVisibel] = useState<boolean>(false)

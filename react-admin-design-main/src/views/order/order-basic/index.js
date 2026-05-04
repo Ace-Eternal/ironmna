@@ -5,13 +5,21 @@ import { ExclamationCircleOutlined } from '@ant-design/icons';
 import { TABLE_COMPO } from '@/settings/websiteSetting';
 import { deleteOrder, getOrderDetail, getOrderList, updateCustomer } from '@/api';
 import { PageWrapper } from '@/components/Page';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { message } from 'antd';
 const CustomerTable = () => {
+    const [searchParams] = useSearchParams();
     const [tableLoading, setTableLoading] = useState(false);
     const [tableData, setTableData] = useState([]);
     const [tableTotal, setTableTotal] = useState(0);
-    const [tableQuery, setTableQuery] = useState({ current: 1, pageSize: 10 });
+    const [tableQuery, setTableQuery] = useState(() => ({
+        current: 1,
+        pageSize: 10,
+        customerId: searchParams.get('customerId') || undefined,
+        month: searchParams.get('month') || undefined,
+        materialType: searchParams.get('materialType') || undefined,
+        steelType: searchParams.get('steelType') || undefined
+    }));
     const [form] = Form.useForm();
     const [modalVisibel, setModalVisibel] = useState(false);
     const columns = [

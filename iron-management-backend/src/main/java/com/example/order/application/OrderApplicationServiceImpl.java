@@ -42,6 +42,11 @@ public class OrderApplicationServiceImpl implements OrderApplicationService {
     }
 
     @Override
+    public PageResult getOrderList(int current, int pageSize, Long customerId, String month, String materialType, String steelType) {
+        return orderService.pageWithCustomer(current, pageSize, customerId, month, materialType, steelType);
+    }
+
+    @Override
     public Order getOrderDetail(int id) {
         Order order = getExistingOrder(id);
         Customer customer = getExistingCustomer(order.getCustomer_id());

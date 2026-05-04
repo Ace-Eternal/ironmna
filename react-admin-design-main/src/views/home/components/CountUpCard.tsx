@@ -9,6 +9,7 @@ interface propState {
   color: string
   iconName: string
   countNum: number
+  decimals?: number
 }
 
 const CountUpCard: FC<propState> = props => {
@@ -30,6 +31,7 @@ const CountUpCard: FC<propState> = props => {
           <CountUp
             start={0}
             end={props.countNum}
+            decimals={props.decimals || 0}
             duration={3}
             style={{
               fontSize: '32px',

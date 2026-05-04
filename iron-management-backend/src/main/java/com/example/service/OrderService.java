@@ -14,4 +14,6 @@ import com.example.dto.PageResult;
 */
 public interface OrderService extends IService<Order> {
     public PageResult pageWithCustomer(int current, int pageSize);
+
+    public PageResult pageWithCustomer(int current, int pageSize, Long customerId, String month, String materialType, String steelType);
 }

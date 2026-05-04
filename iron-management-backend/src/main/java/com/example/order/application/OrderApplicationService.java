@@ -9,6 +9,8 @@ import com.example.vo.UpdateOrderVO;
 public interface OrderApplicationService {
     PageResult getOrderList(int current, int pageSize);
 
+    PageResult getOrderList(int current, int pageSize, Long customerId, String month, String materialType, String steelType);
+
     Order getOrderDetail(int id);
 
     Order createOrder(OrderVO orderVO);

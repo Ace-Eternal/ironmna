@@ -3,9 +3,9 @@ import { useDebounceFn } from 'ahooks';
 import echarts from '@/utils/echarts';
 export function useECharts(options, loading = true, theme = 'default') {
     const chartRef = useRef(null);
-    let chartInstance = null;
+    const chartInstance = useRef(null);
     const { run: resizeFn } = useDebounceFn(() => {
-        chartInstance?.resize();
+        chartInstance.current?.resize();
     }, { wait: 200 });
     useEffect(() => {
         initCharts();
@@ -25,30 +25,30 @@ export function useECharts(options, loading = true, theme = 'default') {
         const el = chartRef?.current;
         if (!el)
             return;
-        chartInstance = echarts.init(el, t);
+        chartInstance.current = echarts.init(el, t);
         window.addEventListener('resize', resizeFn);
     };
     const setOptions = (options) => {
-        if (!chartInstance) {
+        if (!chartInstance.current) {
             initCharts();
-            if (!chartInstance)
+            if (!chartInstance.current)
                 return;
         }
-        chartInstance?.clear();
-        chartInstance?.setOption(options);
+        chartInstance.current?.clear();
+        chartInstance.current?.setOption(options);
     };
     const disposeCharts = () => {
-        if (!chartInstance)
+        if (!chartInstance.current)
             return;
         window.removeEventListener('resize', resizeFn);
-        chartInstance.dispose();
-        chartInstance = null;
+        chartInstance.current.dispose();
+        chartInstance.current = null;
     };
     const getInstance = () => {
-        if (!chartInstance) {
+        if (!chartInstance.current) {
             initCharts();
         }
-        return chartInstance;
+        return chartInstance.current;
     };
     return { chartRef, getInstance };
 }

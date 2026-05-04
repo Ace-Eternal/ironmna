@@ -9,11 +9,11 @@ export function useECharts(
   theme: 'light' | 'dark' | 'default' = 'default'
 ) {
   const chartRef = useRef<HTMLDivElement>(null)
-  let chartInstance: echarts.ECharts | null = null
+  const chartInstance = useRef<echarts.ECharts | null>(null)
 
   const { run: resizeFn } = useDebounceFn(
     () => {
-      chartInstance?.resize()
+      chartInstance.current?.resize()
     },
     { wait: 200 }
   )
@@ -39,35 +39,35 @@ export function useECharts(
     const el = chartRef?.current
     if (!el) return
 
-    chartInstance = echarts.init(el, t)
+    chartInstance.current = echarts.init(el, t)
 
     window.addEventListener('resize', resizeFn)
   }
 
   const setOptions = (options: EChartsOption) => {
-    if (!chartInstance) {
+    if (!chartInstance.current) {
       initCharts()
 
-      if (!chartInstance) return
+      if (!chartInstance.current) return
     }
 
-    chartInstance?.clear()
+    chartInstance.current?.clear()
 
-    chartInstance?.setOption(options)
+    chartInstance.current?.setOption(options)
   }
 
   const disposeCharts = () => {
-    if (!chartInstance) return
+    if (!chartInstance.current) return
     window.removeEventListener('resize', resizeFn)
-    chartInstance.dispose()
-    chartInstance = null
+    chartInstance.current.dispose()
+    chartInstance.current = null
   }
 
   const getInstance = (): echarts.ECharts | null => {
-    if (!chartInstance) {
+    if (!chartInstance.current) {
       initCharts()
     }
-    return chartInstance
+    return chartInstance.current
   }
 
   return { chartRef, getInstance }

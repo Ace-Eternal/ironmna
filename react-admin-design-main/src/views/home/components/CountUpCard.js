@@ -8,7 +8,7 @@ const CountUpCard = props => {
                         height: '120px',
                         borderRadius: '8px 0 0 8px',
                         background: props.color
-                    }, children: _jsx(SvgIcon, { name: props.iconName, size: 40, style: { color: '#fff' } }) }), _jsxs("div", { style: { flex: 1, textAlign: 'center' }, children: [_jsx(CountUp, { start: 0, end: props.countNum, duration: 3, style: {
+                    }, children: _jsx(SvgIcon, { name: props.iconName, size: 40, style: { color: '#fff' } }) }), _jsxs("div", { style: { flex: 1, textAlign: 'center' }, children: [_jsx(CountUp, { start: 0, end: props.countNum, decimals: props.decimals || 0, duration: 3, style: {
                                 fontSize: '32px',
                                 color: '#515a6e'
                             } }), _jsx("p", { style: { fontSize: '16px' }, children: props.title })] })] }) }));

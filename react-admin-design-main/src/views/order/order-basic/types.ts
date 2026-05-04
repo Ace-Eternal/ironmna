@@ -6,6 +6,10 @@ export interface APIResult {
 export interface PageState {
   current: number
   pageSize: number
+  customerId?: string
+  month?: string
+  materialType?: string
+  steelType?: string
 }
 
 export interface CustomerInfo {

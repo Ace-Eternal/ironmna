@@ -22,21 +22,54 @@ import java.util.Map;
 */
 public interface OrderMapper extends BaseMapper<Order> {
 
-    @Select("SELECT o.id, o.customer_id, o.time, o.note, o.total_money, " +
+    @Select("<script>" +
+            "SELECT o.id, o.customer_id, o.time, o.note, o.total_money, " +
             "o.paid_money, o.process_fee, c.id AS customer_id, " +
             "c.customer_name, c.telephone, c.address " +
             "FROM t_order o LEFT JOIN customer c ON o.customer_id = c.id " +
-            "WHERE o.is_deleted = 0 AND c.is_deleted = 0 " +
-            "ORDER BY o.time DESC LIMIT #{offset}, #{pageSize}")
+            "WHERE COALESCE(o.is_deleted, 0) = 0 AND COALESCE(c.is_deleted, 0) = 0 " +
+            "<if test='customerId != null'> AND o.customer_id = #{customerId} </if>" +
+            "<if test='month != null and month != \"\"'> AND DATE_FORMAT(o.time, '%Y-%m') = #{month} </if>" +
+            "<if test='materialType != null and materialType != \"\"'> " +
+            "AND EXISTS (SELECT 1 FROM order_item oi WHERE oi.order_id = o.id AND COALESCE(oi.is_deleted, 0) = 0 " +
+            "AND ((#{materialType} = '未填写类型' AND (oi.type IS NULL OR oi.type = '')) OR oi.type = #{materialType})) " +
+            "</if>" +
+            "<if test='steelType != null and steelType != \"\"'> " +
+            "AND EXISTS (SELECT 1 FROM order_item oi WHERE oi.order_id = o.id AND COALESCE(oi.is_deleted, 0) = 0 " +
+            "AND ((#{steelType} = '未填写钢号' AND (oi.steel_type IS NULL OR oi.steel_type = '')) OR oi.steel_type = #{steelType})) " +
+            "</if>" +
+            "ORDER BY o.time DESC LIMIT #{offset}, #{pageSize}" +
+            "</script>")
     List<Map<String, Object>> selectOrderWithCustomer(
             @Param("offset") long offset,
-            @Param("pageSize") int pageSize
+            @Param("pageSize") int pageSize,
+            @Param("customerId") Long customerId,
+            @Param("month") String month,
+            @Param("materialType") String materialType,
+            @Param("steelType") String steelType
     );
 
-    @Select("SELECT COUNT(*) FROM t_order o " +
+    @Select("<script>" +
+            "SELECT COUNT(*) FROM t_order o " +
             "LEFT JOIN customer c ON o.customer_id = c.id " +
-            "WHERE o.is_deleted = 0 AND c.is_deleted = 0")
-    long selectOrderCount();
+            "WHERE COALESCE(o.is_deleted, 0) = 0 AND COALESCE(c.is_deleted, 0) = 0 " +
+            "<if test='customerId != null'> AND o.customer_id = #{customerId} </if>" +
+            "<if test='month != null and month != \"\"'> AND DATE_FORMAT(o.time, '%Y-%m') = #{month} </if>" +
+            "<if test='materialType != null and materialType != \"\"'> " +
+            "AND EXISTS (SELECT 1 FROM order_item oi WHERE oi.order_id = o.id AND COALESCE(oi.is_deleted, 0) = 0 " +
+            "AND ((#{materialType} = '未填写类型' AND (oi.type IS NULL OR oi.type = '')) OR oi.type = #{materialType})) " +
+            "</if>" +
+            "<if test='steelType != null and steelType != \"\"'> " +
+            "AND EXISTS (SELECT 1 FROM order_item oi WHERE oi.order_id = o.id AND COALESCE(oi.is_deleted, 0) = 0 " +
+            "AND ((#{steelType} = '未填写钢号' AND (oi.steel_type IS NULL OR oi.steel_type = '')) OR oi.steel_type = #{steelType})) " +
+            "</if>" +
+            "</script>")
+    long selectOrderCount(
+            @Param("customerId") Long customerId,
+            @Param("month") String month,
+            @Param("materialType") String materialType,
+            @Param("steelType") String steelType
+    );
 }
 
 

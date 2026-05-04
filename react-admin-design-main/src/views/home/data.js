@@ -1,271 +1,234 @@
-export const countUpData = [
-    {
-        title: '今日点击',
-        icon: 'location',
-        count: 682,
-        color: '#1890ff'
+const chartColors = ['#1677ff', '#f97316', '#f59e0b', '#14b8a6', '#8b5cf6', '#22c55e'];
+export const emptyDashboardData = {
+    summary: {
+        orderCount: 0,
+        customerCount: 0,
+        itemCount: 0,
+        totalWeight: 0,
+        totalMoney: 0
     },
-    {
-        title: '新增用户',
-        icon: 'person',
-        count: 259,
-        color: '#fa541c'
-    },
-    {
-        title: '信息发送',
-        icon: 'message',
-        count: 1262,
-        color: '#faad14'
-    },
-    {
-        title: '点赞统计',
-        icon: 'like',
-        count: 508,
-        color: '#13c2c2'
-    },
-    {
-        title: '累计收藏',
-        icon: 'heart',
-        count: 379,
-        color: '#722ed1'
-    }
-];
-export const pieOptions = {
-    tooltip: {
-        trigger: 'item'
-    },
-    legend: {
-        bottom: 0,
-        left: 'center'
-    },
-    series: [
-        {
-            name: '访问来源',
-            type: 'pie',
-            radius: '70%',
-            center: ['50%', '45%'],
-            color: ['#1890ff', '#fa541c', '#faad14', '#13c2c2', '#722ed1'],
-            data: [
-                { value: 1620, name: '直接访问' },
-                { value: 1169, name: '邮件营销' },
-                { value: 986, name: '联盟广告' },
-                { value: 624, name: '视频广告' },
-                { value: 857, name: '搜索引擎' }
-            ],
-            roseType: 'radius',
-            animationType: 'scale',
-            animationEasing: 'exponentialInOut',
-            animationDelay: function () {
-                return Math.random() * 400;
-            }
-        }
-    ]
+    monthlyTrend: [],
+    customerRanking: [],
+    materialTypeShare: [],
+    steelTypeRanking: [],
+    recentOrders: []
 };
-export const ringOptions = {
-    tooltip: {
-        trigger: 'item'
-    },
-    legend: {
-        bottom: 0,
-        left: 'center'
-    },
-    series: [
+export function buildCountUpData(data) {
+    const { summary } = data;
+    return [
         {
-            color: ['#1890ff', '#fa541c', '#faad14', '#13c2c2', '#722ed1'],
-            name: '访问来源',
-            type: 'pie',
-            radius: ['40%', '70%'],
-            center: ['50%', '45%'],
-            avoidLabelOverlap: false,
-            itemStyle: {
-                borderRadius: 10,
-                borderColor: '#fff',
-                borderWidth: 2
-            },
-            label: {
-                show: false,
-                position: 'center'
-            },
-            emphasis: {
-                label: {
-                    show: true,
-                    fontSize: '12',
-                    fontWeight: 'bold'
-                }
-            },
-            labelLine: {
-                show: false
-            },
-            data: [
-                { value: 1620, name: '直接访问' },
-                { value: 1169, name: '邮件营销' },
-                { value: 986, name: '联盟广告' },
-                { value: 624, name: '视频广告' },
-                { value: 2758, name: '搜索引擎' }
-            ],
-            animationType: 'scale',
-            animationEasing: 'exponentialInOut',
-            animationDelay: function () {
-                return Math.random() * 100;
-            }
+            title: '有效订单数',
+            icon: 'document',
+            count: summary.orderCount || 0,
+            color: '#1677ff'
+        },
+        {
+            title: '客户数',
+            icon: 'person',
+            count: summary.customerCount || 0,
+            color: '#f97316'
+        },
+        {
+            title: '材料明细数',
+            icon: 'table',
+            count: summary.itemCount || 0,
+            color: '#f59e0b'
+        },
+        {
+            title: '材料总重量(kg)',
+            icon: 'hints',
+            count: summary.totalWeight || 0,
+            decimals: 2,
+            color: '#14b8a6'
+        },
+        {
+            title: '订单总金额(元)',
+            icon: 'excel',
+            count: summary.totalMoney || 0,
+            decimals: 2,
+            color: '#8b5cf6'
         }
-    ]
-};
-export const radarOptions = {
-    legend: {
-        bottom: 0,
-        data: ['推广渠道', '广告投放', '访问来源']
-    },
-    radar: {
-        radius: '70%',
-        center: ['50%', '45%'],
-        splitNumber: 8,
-        indicator: [
+    ];
+}
+export function buildMonthlyTrendOptions(monthlyTrend) {
+    return {
+        title: {
+            text: '月度订单趋势',
+            left: 0,
+            top: 0,
+            textStyle: {
+                fontSize: 15,
+                fontWeight: 600
+            }
+        },
+        tooltip: {
+            trigger: 'axis'
+        },
+        legend: {
+            top: 0,
+            right: 0
+        },
+        grid: {
+            left: 0,
+            right: '1%',
+            top: 48,
+            bottom: 0,
+            containLabel: true
+        },
+        xAxis: {
+            type: 'category',
+            data: monthlyTrend.map(item => item.month),
+            axisTick: {
+                alignWithLabel: true
+            }
+        },
+        yAxis: [
             {
-                name: '直接访问'
+                type: 'value',
+                name: '金额'
             },
             {
-                name: '邮件营销'
+                type: 'value',
+                name: '单数'
+            }
+        ],
+        series: [
+            {
+                name: '订单金额',
+                type: 'bar',
+                barWidth: '36%',
+                color: '#1677ff',
+                data: monthlyTrend.map(item => item.totalMoney || 0)
             },
             {
-                name: '联盟广告'
-            },
-            {
-                name: '视频广告'
-            },
-            {
-                name: '搜索引擎'
+                name: '订单数',
+                type: 'line',
+                yAxisIndex: 1,
+                smooth: true,
+                color: '#f97316',
+                data: monthlyTrend.map(item => item.orderCount || 0)
             }
         ]
-    },
-    series: [
-        {
-            type: 'radar',
-            symbolSize: 0,
-            areaStyle: {
-                shadowBlur: 0,
-                shadowColor: 'rgba(0,0,0,.2)',
-                shadowOffsetX: 0,
-                shadowOffsetY: 10,
-                opacity: 1
-            },
-            data: [
-                {
-                    value: [1920, 1920, 1920, 0, 0],
-                    name: '推广渠道',
-                    itemStyle: {
-                        color: '#1890ff'
-                    }
-                },
-                {
-                    value: [1920, 0, 0, 1920, 1920],
-                    name: '访问来源',
-                    itemStyle: {
-                        color: '#722ed1'
-                    }
-                },
-                {
-                    value: [920, 920, 920, 920, 920],
-                    name: '广告投放',
-                    itemStyle: {
-                        color: '#faad14'
-                    }
-                }
-            ]
-        }
-    ]
-};
-export const barOptions = {
-    tooltip: {
-        trigger: 'axis',
-        axisPointer: {
-            lineStyle: {
-                width: 1,
-                color: '#fa541c'
+    };
+}
+export function buildCustomerRankingOptions(customerRanking) {
+    return {
+        title: {
+            text: '客户贡献排行',
+            left: 0,
+            top: 0,
+            textStyle: {
+                fontSize: 15,
+                fontWeight: 600
             }
-        }
-    },
-    grid: {
-        left: 0,
-        right: '1%',
-        top: '2%',
-        bottom: 0,
-        containLabel: true
-    },
-    xAxis: {
-        type: 'category',
-        data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-        axisTick: {
-            alignWithLabel: true
-        }
-    },
-    yAxis: {
-        type: 'value',
-        max: value => {
-            return Math.ceil(value.max / 100) * 100 + 300;
-        }
-    },
-    label: {
-        show: true,
-        fontSize: 14,
-        color: '#1890ff',
-        position: 'top',
-        formatter: '{c}'
-    },
-    series: [
-        {
-            type: 'bar',
-            name: '访问量',
-            barWidth: '40%',
-            color: ['#1890ff'],
-            data: [782, 925, 1196, 812, 328, 223, 1080]
-        }
-    ]
-};
-export const lineOptions = {
-    tooltip: {
-        trigger: 'axis',
-        axisPointer: {
-            lineStyle: {
-                width: 1,
-                color: '#fa541c'
+        },
+        tooltip: {
+            trigger: 'axis'
+        },
+        grid: {
+            left: 0,
+            right: '1%',
+            top: 42,
+            bottom: 0,
+            containLabel: true
+        },
+        xAxis: {
+            type: 'category',
+            data: customerRanking.map(item => item.customerName)
+        },
+        yAxis: {
+            type: 'value',
+            name: '金额'
+        },
+        series: [
+            {
+                type: 'bar',
+                name: '订单金额',
+                color: '#14b8a6',
+                data: customerRanking.map(item => ({
+                    name: item.customerName,
+                    value: item.totalMoney || 0,
+                    customerId: item.customerId
+                }))
             }
-        }
-    },
-    grid: {
-        left: 0,
-        right: '1%',
-        top: '2%',
-        bottom: 0,
-        containLabel: true
-    },
-    xAxis: {
-        type: 'category',
-        data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-        axisTick: {
-            alignWithLabel: true
-        }
-    },
-    yAxis: {
-        type: 'value',
-        max: value => {
-            return Math.ceil(value.max / 100) * 100 + 300;
-        }
-    },
-    label: {
-        show: true,
-        fontSize: 14,
-        color: '#722ed1',
-        position: 'top',
-        formatter: '{c}'
-    },
-    series: [
-        {
-            type: 'line',
-            name: '访问量',
-            color: ['#722ed1'],
-            smooth: true,
-            data: [782, 925, 1196, 812, 328, 223, 1080]
-        }
-    ]
-};
+        ]
+    };
+}
+export function buildMaterialTypeOptions(materialTypeShare) {
+    return {
+        title: {
+            text: '材料类型占比',
+            left: 0,
+            top: 0,
+            textStyle: {
+                fontSize: 15,
+                fontWeight: 600
+            }
+        },
+        tooltip: {
+            trigger: 'item'
+        },
+        legend: {
+            bottom: 0,
+            left: 'center'
+        },
+        series: [
+            {
+                name: '材料金额',
+                type: 'pie',
+                radius: ['42%', '70%'],
+                center: ['50%', '48%'],
+                color: chartColors,
+                data: materialTypeShare.map(item => ({
+                    name: item.materialType,
+                    value: item.steelMoney || 0,
+                    materialType: item.materialType
+                }))
+            }
+        ]
+    };
+}
+export function buildSteelTypeRankingOptions(steelTypeRanking) {
+    const ranking = [...steelTypeRanking].reverse();
+    return {
+        title: {
+            text: '钢号金额排行',
+            left: 0,
+            top: 0,
+            textStyle: {
+                fontSize: 15,
+                fontWeight: 600
+            }
+        },
+        tooltip: {
+            trigger: 'axis'
+        },
+        grid: {
+            left: 0,
+            right: '1%',
+            top: 42,
+            bottom: 0,
+            containLabel: true
+        },
+        xAxis: {
+            type: 'value',
+            name: '金额'
+        },
+        yAxis: {
+            type: 'category',
+            data: ranking.map(item => item.steelType)
+        },
+        series: [
+            {
+                type: 'bar',
+                name: '材料金额',
+                color: '#8b5cf6',
+                data: ranking.map(item => ({
+                    name: item.steelType,
+                    value: item.steelMoney || 0,
+                    steelType: item.steelType
+                }))
+            }
+        ]
+    };
+}
