@@ -1,0 +1,8 @@
+artifacts/
+runtime-logs/
+iron-management-backend/target/
+react-admin-design-main/dist/
+react-admin-design-main/node_modules/
+*.log
+*.class
+*.env.local

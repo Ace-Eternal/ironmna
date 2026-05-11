@@ -12,3 +12,5 @@
 - 2026-05-04 Codex：排查公网空白页，确认 Vite 相对资源路径导致嵌套路由刷新时 JS 加载为 HTML；将 `base` 改为 `/`，本地重打前端并仅替换服务器 dist。
 - 2026-05-04 Codex：按用户要求将公网根路径 `/` 在 Nginx 层重定向到 `/login#/login`，并同步更新仓库 Nginx 模板和验证文档。
 - 2026-05-04 Codex：将空白页排查、Vite `base` 规则、根路径登录重定向和验证命令沉淀到 `DEPLOYMENT.md`。
+- 2026-05-11 Codex：新增 GitHub Actions Docker 镜像构建 workflow，使用 GitHub Container Registry 发布后端与前端镜像；同步更新 Compose 镜像覆盖变量和部署文档。
+- 2026-05-11 Codex：发现前端 Docker 构建会触发 Husky 且 Docker context 不包含 `.git`，在前端 Dockerfile 构建阶段设置 `HUSKY=0` 避免 CI 容器构建失败。

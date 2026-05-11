@@ -12,8 +12,14 @@ FROM eclipse-temurin:17-jre-alpine
 
 WORKDIR /app
 
+RUN addgroup -S ironman && adduser -S ironman -G ironman
+
 COPY --from=build /app/target/*.jar /app/app.jar
 
+RUN chown -R ironman:ironman /app
+
 EXPOSE 8888
+
+USER ironman
 
 ENTRYPOINT ["java", "-jar", "/app/app.jar"]

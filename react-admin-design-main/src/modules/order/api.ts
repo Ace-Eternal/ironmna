@@ -56,7 +56,8 @@ export function getDownloadUrl(id: number | string) {
 
 export function download(fileName: string) {
   return httpClient({
-    url: `/order/download?file=${fileName}`,
-    method: 'get'
+    url: `/order/download?file=${encodeURIComponent(fileName)}`,
+    method: 'get',
+    responseType: 'blob'
   })
 }

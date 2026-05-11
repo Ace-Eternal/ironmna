@@ -15,5 +15,4 @@ public class AdminDTO {
     private String token;
     private String desc;
     private String homePath;
-    private String password;
 }

@@ -4,7 +4,8 @@ import { PlusOutlined } from '@ant-design/icons';
 import { Button, Card, Col, Form, Input, InputNumber, Row, Select, Space, Tag, message } from 'antd';
 import { useLocation, useNavigate } from 'react-router-dom';
 import dayjs from 'dayjs';
-import { getDownloadUrl, getOrderDetail, updateOrder } from '@/api';
+import { download, getDownloadUrl, getOrderDetail, updateOrder } from '@/api';
+import { downloadByData } from '@/utils/download';
 import { steeltypeData, typeData } from '../order-addition/data';
 import styles from './index.module.less';
 const SQUARE_STEEL = typeData.type[0];
@@ -201,7 +202,9 @@ const TableEditRow = () => {
             if (!fileName) {
                 throw new Error('未获取到导出文件');
             }
-            window.open(`/iron/order/download?file=${String(fileName)}`, '_blank');
+            const safeFileName = String(fileName);
+            const fileData = (await download(safeFileName));
+            downloadByData(fileData, safeFileName, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
         }
         catch (error) {
             const fallback = error instanceof Error ? error.message : '导出失败';

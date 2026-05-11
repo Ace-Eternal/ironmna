@@ -28,3 +28,11 @@
 
 - 后端：`http://127.0.0.1:8888/iron`
 - 前端：`http://127.0.0.1:8201/`
+
+## GitHub Actions Docker 镜像发布
+
+- 日期：2026-05-11
+- 执行者：Codex
+- 命令：`git diff --check`
+- 结果：通过
+- 备注：新增 workflow 依赖 GitHub Actions 环境执行；当前本机未安装 Docker，`docker --version` 返回命令不存在，因此未在本机执行 `docker compose config` 或实际镜像构建。

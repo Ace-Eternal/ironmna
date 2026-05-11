@@ -1,5 +1,6 @@
 package com.example.common.handler;
 
+import com.example.common.auth.UnauthorizedException;
 import com.example.common.exception.BusinessException;
 import com.example.dto.Result;
 import lombok.extern.slf4j.Slf4j;
@@ -15,6 +16,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<Result> handleBusinessException(BusinessException exception) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Result.fail(exception.getMessage()));
+    }
+
+    @ExceptionHandler(UnauthorizedException.class)
+    public ResponseEntity<Result> handleUnauthorizedException(UnauthorizedException exception) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Result.fail(exception.getMessage()));
     }
 
     @ExceptionHandler(Exception.class)

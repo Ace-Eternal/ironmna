@@ -112,10 +112,8 @@ public class Admin implements Serializable {
         sb.append("Hash = ").append(hashCode());
         sb.append(", id=").append(id);
         sb.append(", username=").append(username);
-        sb.append(", password=").append(password);
         sb.append(", realname=").append(realname);
         sb.append(", avatar=").append(avatar);
-        sb.append(", token=").append(token);
         sb.append(", descp=").append(descp);
         sb.append(", homepath=").append(homepath);
         sb.append(", serialVersionUID=").append(serialVersionUID);
