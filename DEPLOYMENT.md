@@ -18,10 +18,9 @@ The workflow `.github/workflows/docker-images.yml` builds the backend and fronte
 
 - Backend image: `ghcr.io/<github-owner>/ironman-backend`
 - Frontend image: `ghcr.io/<github-owner>/ironman-frontend`
-- Branch pushes publish a branch tag and a `sha-<commit>` tag.
+- Pushes to `main` publish the `main`, `latest`, and `sha-<commit>` tags.
 - Git tags matching `v*.*.*` publish the matching version tag.
-- The default branch also publishes `latest`.
-- Pull requests build both images for verification, but do not push images.
+- Other branches and pull requests do not run the Docker image workflow.
 
 Repository requirements:
 

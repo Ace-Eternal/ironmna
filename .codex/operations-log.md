@@ -14,3 +14,5 @@
 - 2026-05-04 Codex：将空白页排查、Vite `base` 规则、根路径登录重定向和验证命令沉淀到 `DEPLOYMENT.md`。
 - 2026-05-11 Codex：新增 GitHub Actions Docker 镜像构建 workflow，使用 GitHub Container Registry 发布后端与前端镜像；同步更新 Compose 镜像覆盖变量和部署文档。
 - 2026-05-11 Codex：发现前端 Docker 构建会触发 Husky 且 Docker context 不包含 `.git`，在前端 Dockerfile 构建阶段设置 `HUSKY=0` 避免 CI 容器构建失败。
+- 2026-05-11 Codex：根据 GitHub Actions 日志定位前端镜像构建失败原因为 Corepack 自动下载 `pnpm 11`，而 `node:20-alpine` 不支持其 `node:sqlite` 依赖；固定项目与 Dockerfile 使用 `pnpm@10.13.1`。
+- 2026-05-11 Codex：按用户要求将 Docker 镜像 workflow 触发范围收窄为仅 `main` push、版本 tag 和手动触发，移除 PR 与任意分支 push 触发。

@@ -36,3 +36,14 @@
 - 命令：`git diff --check`
 - 结果：通过
 - 备注：新增 workflow 依赖 GitHub Actions 环境执行；当前本机未安装 Docker，`docker --version` 返回命令不存在，因此未在本机执行 `docker compose config` 或实际镜像构建。
+
+### 前端镜像构建失败修复
+
+- 日期：2026-05-11
+- 执行者：Codex
+- 失败现象：GitHub Actions 中 `corepack enable && pnpm install --frozen-lockfile` 自动下载 `pnpm 11.0.9`，但 `node:20-alpine` 运行时不支持 `node:sqlite`。
+- 修复：在 `package.json` 声明 `packageManager: pnpm@10.13.1`，并在前端 Dockerfile 显式 `corepack prepare pnpm@10.13.1 --activate`。
+- 命令：`pnpm build`
+- 结果：通过
+- 命令：`git diff --check`
+- 结果：通过
