@@ -23,6 +23,8 @@ import java.util.Map;
 public class DocumentTemplateService {
 
     private static final DateTimeFormatter FILE_NAME_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
+    private static final String GENERATED_FILE_PREFIX = "order_";
+    private static final String GENERATED_FILE_SUFFIX = ".docx";
 
     private final ResourceProperties resourceProperties;
 
@@ -48,7 +50,11 @@ public class DocumentTemplateService {
     }
 
     public GeneratedFile loadGeneratedFile(String fileName) {
-        Path filePath = Path.of(resourceProperties.getExportDir(), fileName);
+        Path exportDir = Path.of(resourceProperties.getExportDir()).toAbsolutePath().normalize();
+        Path filePath = exportDir.resolve(validateGeneratedFileName(fileName)).normalize();
+        if (!filePath.startsWith(exportDir)) {
+            throw new BusinessException("Requested file path is invalid");
+        }
         if (!Files.exists(filePath)) {
             throw new BusinessException("Requested file does not exist");
         }
@@ -59,5 +65,14 @@ public class DocumentTemplateService {
         } catch (IOException exception) {
             throw new BusinessException("Failed to read generated file");
         }
+    }
+
+    private String validateGeneratedFileName(String fileName) {
+        if (fileName == null || fileName.isBlank()
+                || fileName.contains("/") || fileName.contains("\\") || fileName.contains("..")
+                || !fileName.startsWith(GENERATED_FILE_PREFIX) || !fileName.endsWith(GENERATED_FILE_SUFFIX)) {
+            throw new BusinessException("Requested file name is invalid");
+        }
+        return fileName;
     }
 }

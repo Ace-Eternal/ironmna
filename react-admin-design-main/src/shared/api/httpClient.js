@@ -29,6 +29,9 @@ httpClient.interceptors.request.use((config) => {
 }, handleError);
 httpClient.interceptors.response.use((response) => {
     const data = response.data;
+    if (data instanceof Blob) {
+        return data;
+    }
     if (data.code === 0) {
         return data.data;
     }

@@ -25,3 +25,5 @@ app:
     api-key: ${MATERIAL_RECOGNITION_API_KEY:}
     model: ${MATERIAL_RECOGNITION_MODEL:gpt-4.1}
     max-image-bytes: ${MATERIAL_RECOGNITION_MAX_IMAGE_BYTES:8388608}
+  auth:
+    allow-legacy-plaintext-passwords: ${APP_AUTH_ALLOW_LEGACY_PLAINTEXT_PASSWORDS:false}

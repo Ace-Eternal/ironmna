@@ -7,15 +7,55 @@
 
 ## Docker Compose
 1. Ensure `word-template/template.docx` exists.
-2. Run `docker compose up --build`.
-3. Frontend will be available at `http://localhost:8201`.
-4. Backend will be available at `http://localhost:8888/iron`.
+2. Copy `.env.example` to `.env` and replace every password/origin placeholder.
+3. Run `docker compose up --build`.
+4. Frontend will be available at `http://localhost:8201`.
+5. Backend and MySQL are only reachable on the private Compose network; do not publish `8888` or `3306` on an internet-facing server.
+
+## GitHub Actions Docker Images
+
+The workflow `.github/workflows/docker-images.yml` builds the backend and frontend Docker images on GitHub Actions and pushes them to GitHub Container Registry.
+
+- Backend image: `ghcr.io/<github-owner>/ironman-backend`
+- Frontend image: `ghcr.io/<github-owner>/ironman-frontend`
+- Branch pushes publish a branch tag and a `sha-<commit>` tag.
+- Git tags matching `v*.*.*` publish the matching version tag.
+- The default branch also publishes `latest`.
+- Pull requests build both images for verification, but do not push images.
+
+Repository requirements:
+
+- In GitHub, keep Actions enabled and allow the workflow `GITHUB_TOKEN` to write packages.
+- For private repositories or private packages, log in on the server with a token that has `read:packages`.
+
+Server pull example:
+
+```bash
+echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GITHUB_USER" --password-stdin
+
+export BACKEND_IMAGE=ghcr.io/<github-owner>/ironman-backend:latest
+export FRONTEND_IMAGE=ghcr.io/<github-owner>/ironman-frontend:latest
+docker compose pull backend frontend
+docker compose up -d
+```
 
 ## Runtime Configuration
 - Frontend API base URL is injected by `VITE_API_BASE_URL`.
 - Backend datasource settings use `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USERNAME`, and `DB_PASSWORD`.
 - Backend document export uses `APP_TEMPLATE_PATH` and `APP_EXPORT_DIR`.
 - Cross-origin policy is controlled by `APP_CORS_ALLOWED_ORIGINS`.
+- Authentication requires BCrypt-hashed admin passwords. `APP_AUTH_ALLOW_LEGACY_PLAINTEXT_PASSWORDS=true` is only for a short, one-time migration window; keep it `false` in production.
+- `MYSQL_ROOT_PASSWORD` and `DB_PASSWORD` must be unique strong values. Rotate any value that has ever appeared in source code, logs, screenshots, or chat.
+
+## Production Security Baseline
+
+- Expose only the public Nginx/frontend port, normally `80` or `443`.
+- Keep MySQL inside the Docker network. Do not map `3306:3306` unless it is bound to localhost for emergency maintenance.
+- Keep the Spring Boot service inside the Docker network. The frontend Nginx container proxies `/iron/` to `backend:8888`.
+- Use the `DB_USERNAME` application account, not MySQL `root`, for backend connections.
+- Store `.env` only on the server and never commit it.
+- After deployment, verify unauthenticated API calls return `401`, for example `curl -i http://localhost:8201/iron/customer/getCustomerList?current=1&pageSize=10`.
+- Delete old `artifacts/` and `runtime-logs/` directories from source control history or rotate every secret that appeared there before sharing the repository.
 
 ## Production Server Deployment
 
@@ -115,11 +155,12 @@ nohup env \
   DB_HOST=127.0.0.1 \
   DB_PORT=3306 \
   DB_NAME=iron_management \
-  DB_USERNAME=root \
+  DB_USERNAME=iron_app \
   DB_PASSWORD='CHANGE_ME_ON_SERVER' \
   APP_TEMPLATE_PATH="$APP_DIR/template.docx" \
   APP_EXPORT_DIR=/tmp/ironman-exports \
-  APP_CORS_ALLOWED_ORIGINS='http://106.54.35.68,http://localhost:8201,http://127.0.0.1:8201' \
+  APP_CORS_ALLOWED_ORIGINS='https://your-domain.example' \
+  APP_AUTH_ALLOW_LEGACY_PLAINTEXT_PASSWORDS=false \
   java -jar "$APP_DIR/$JAR_NAME" > "$APP_DIR/logName.log" 2>&1 &
 ```
 
@@ -136,12 +177,13 @@ Run these checks from the server or local machine:
 
 ```bash
 curl -I http://106.54.35.68/
-curl -fsS http://127.0.0.1:8888/iron/dashboard/home
+curl -i http://127.0.0.1:8888/iron/dashboard/home
 curl -fsS http://127.0.0.1/
-curl -fsS http://106.54.35.68/iron/dashboard/home
+curl -i http://106.54.35.68/iron/dashboard/home
 ```
 
 The root check must return `302` with `Location: http://106.54.35.68/login#/login`.
+The unauthenticated dashboard checks must return `401`.
 
 Check the backend process and logs:
 
@@ -160,7 +202,7 @@ Rollback uses the latest backup under:
 - Keep the frontend proxy at `/iron` so local dev and container deployment share the same API path.
 - Keep Vite `base` as `/` for production. Do not use `./`, because refreshing nested frontend routes such as `/login` or `/home` makes the browser request `/login/assets/...`; Nginx then returns `index.html` instead of JavaScript and the page becomes blank.
 - Avoid embedding host-specific absolute paths in backend code.
-- For production, replace default passwords and mount persistent database storage.
+- For production, replace default passwords, rotate leaked passwords, and mount persistent database storage.
 
 ## Production Troubleshooting Notes
 
@@ -236,7 +278,7 @@ Verification:
 ```bash
 curl -I http://106.54.35.68/
 curl -I http://106.54.35.68/login
-curl -fsS http://106.54.35.68/iron/dashboard/home
+curl -i http://106.54.35.68/iron/dashboard/home
 ```
 
 Expected result:
@@ -244,4 +286,4 @@ Expected result:
 - `/` returns `302`.
 - `Location` is `http://106.54.35.68/login#/login`.
 - `/login` returns `200 OK`.
-- `/iron/dashboard/home` returns `code=0`.
+- `/iron/dashboard/home` returns `401` until a valid `Authorization` token is supplied.

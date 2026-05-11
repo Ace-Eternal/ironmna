@@ -1,14 +1,12 @@
 import { loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import { createSvgIconsPlugin } from 'vite-plugin-svg-icons';
-import { viteMockServe } from 'vite-plugin-mock';
 import { wrapperEnv } from './build/utils';
 // 需要安装 @typings/node 插件
 import { resolve } from 'path';
 /** @type {import('vite').UserConfig} */
 export default ({ command, mode }) => {
     const root = process.cwd();
-    const isBuild = command === 'build';
     const env = loadEnv(mode, root);
     // this function can be converted to different typings
     const viteEnv = wrapperEnv(env);
@@ -38,17 +36,6 @@ export default ({ command, mode }) => {
             createSvgIconsPlugin({
                 iconDirs: [resolve(process.cwd(), 'src/assets/icons')],
                 symbolId: 'icon-[dir]-[name]'
-            }),
-            viteMockServe({
-                mockPath: 'mock',
-                ignore: /^_/,
-                localEnabled: !isBuild,
-                prodEnabled: isBuild,
-                injectCode: `
-          import { setupProdMockServer } from 'mock/_createProductionServer';
-
-          setupProdMockServer()
-          `
             })
         ],
         build: {
