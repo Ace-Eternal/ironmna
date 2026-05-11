@@ -2,6 +2,7 @@
   "name": "react-admin-design",
   "version": "1.0.0",
   "type": "module",
+  "packageManager": "pnpm@10.13.1",
   "author": {
     "name": "baimingxuan",
     "email": "354372738@qq.com",
